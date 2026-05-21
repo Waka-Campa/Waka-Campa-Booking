@@ -176,7 +176,7 @@ if (value == null || value === '' || value === 'N/A') return '';
 if (typeof value === 'number' && value === 0) return '';
 if (String(value).trim() === '') return '';
 const formatted = formatter ? formatter(value) : String(value);
-return <div><strong>${label}:</strong> ${formatted}</div>;
+return <strong>${label}:</strong> ${formatted};
 }
 
 /* KEEPING ALL DETAILS UNTOUCHED */
