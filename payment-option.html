@@ -154,7 +154,6 @@ document.getElementById('verify-btn').onclick = async function(e){
       const boosterTotal = data.boosterTotal;
       const fwdSeatQty = data.fwdSeatQty;
       const fwdSeatTotal = data.fwdSeatTotal;
-      const handlingQty = data.handlingQty;
       const handlingTotal = data.handlingTotal;
       const chainsQty = data.chainsQty;
       const chainsTotal = data.chainsTotal;
@@ -273,7 +272,6 @@ const RTF_ROWS = [
   valIfPresent("Booster Child Seat Total Fee", boosterTotal, v => `${formatCurrency(v)} NZD`),
   valIfPresent("Forward-facing Child Seat Qty", fwdSeatQty),
   valIfPresent("Forward-facing Child Seat Total Fee", fwdSeatTotal, v => `${formatCurrency(v)} NZD`),
-  valIfPresent("Handling & Living Equipment Qty", handlingQty),
   valIfPresent("Handling & Living Equipment Total Fee", handlingTotal, v => `${formatCurrency(v)} NZD`),
   valIfPresent("Snow Chains Qty", chainsQty),
   valIfPresent("Snow Chains Total Fee", chainsTotal, v => `${formatCurrency(v)} NZD`),
