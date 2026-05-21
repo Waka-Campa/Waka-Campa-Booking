@@ -248,32 +248,54 @@ document.getElementById('verify-btn').onclick = async function(e){
         `;
       }
 
-      const RTF_ROWS = [];
-      RTF_ROWS.push(valIfPresent("Number of Days", numberOfDays));
-      RTF_ROWS.push(valIfPresent("Daily Rate", `${formatCurrency(seasonsDailyRate)} NZD`));
-      RTF_ROWS.push(valIfPresent("Insurance", `${insuranceName || 'N/A'} (${formatCurrency(insuranceAmount)} NZD)`));
-      RTF_ROWS.push(valIfPresent("Booster Child Seat Qty", boosterQty));
-      RTF_ROWS.push(valIfPresent("Booster Child Seat Total Fee", `${formatCurrency(boosterTotal)} NZD`));
-      RTF_ROWS.push(valIfPresent("Forward-facing Child Seat Qty", fwdSeatQty));
-      RTF_ROWS.push(valIfPresent("Forward-facing Child Seat Total Fee", `${formatCurrency(fwdSeatTotal)} NZD`));
-      RTF_ROWS.push(valIfPresent("Handling & Living Equipment Qty", handlingQty));
-      RTF_ROWS.push(valIfPresent("Handling & Living Equipment Total Fee", `${formatCurrency(handlingTotal)} NZD`));
-      RTF_ROWS.push(valIfPresent("Snow Chains Qty", chainsQty));
-      RTF_ROWS.push(valIfPresent("Snow Chains Total Fee", `${formatCurrency(chainsTotal)} NZD`));
-      RTF_ROWS.push(valIfPresent("Tax", `${taxName || 'N/A'} (${formatCurrency(taxAmount)} NZD)`));
-      RTF_ROWS.push(valIfPresent("Total Rates & Fees", `${formatCurrency(totalRatesAndFees)} NZD`));
+     function isDisplayValue(value) {
+  return value !== null &&
+    value !== undefined &&
+    value !== '' &&
+    value !== 'N/A' &&
+    !(typeof value === 'number' && value === 0);
+}
 
-      if (RTF_ROWS.some(row => row.trim() !== '')) {
-        html += `
-          <div style="margin-bottom:20px;">
-            <h4 style="margin:0 0 10px 0;font-size:18px;color:#000;text-align:left"><strong><u>Rates & Extra Fees</u></strong></h4>
-            <div style="display:grid;grid-template-columns:1fr;gap:8px;font-size:16px;text-align:left;">
-              ${RTF_ROWS.filter(row => row.trim() !== '').join('')}
-            </div>
-          </div>
-          <div style="border-bottom:1px solid #ddd;margin:20px 0;"></div>
-        `;
-      }
+function valIfPresent(label, value, formatter = null) {
+  if (!isDisplayValue(value)) return '';
+  const formatted = formatter ? formatter(value) : String(value);
+  if (!isDisplayValue(formatted)) return '';
+  return `<div><strong>${label}:</strong> ${formatted}</div>`;
+}
+
+const RTF_ROWS = [
+  valIfPresent("Number of Days", numberOfDays),
+  valIfPresent("Daily Rate", seasonsDailyRate, v => `${formatCurrency(v)} NZD`),
+  (isDisplayValue(insuranceName) && isDisplayValue(insuranceAmount))
+    ? `<div><strong>Insurance:</strong> ${insuranceName} (${formatCurrency(insuranceAmount)} NZD)</div>`
+    : '',
+  valIfPresent("Booster Child Seat Qty", boosterQty),
+  valIfPresent("Booster Child Seat Total Fee", boosterTotal, v => `${formatCurrency(v)} NZD`),
+  valIfPresent("Forward-facing Child Seat Qty", fwdSeatQty),
+  valIfPresent("Forward-facing Child Seat Total Fee", fwdSeatTotal, v => `${formatCurrency(v)} NZD`),
+  valIfPresent("Handling & Living Equipment Qty", handlingQty),
+  valIfPresent("Handling & Living Equipment Total Fee", handlingTotal, v => `${formatCurrency(v)} NZD`),
+  valIfPresent("Snow Chains Qty", chainsQty),
+  valIfPresent("Snow Chains Total Fee", chainsTotal, v => `${formatCurrency(v)} NZD`),
+  (isDisplayValue(taxName) && isDisplayValue(taxAmount))
+    ? `<div><strong>Tax:</strong> ${taxName} (${formatCurrency(taxAmount)} NZD)</div>`
+    : '',
+  valIfPresent("Total Rates & Fees", totalRatesAndFees, v => `${formatCurrency(v)} NZD`)
+].filter(Boolean);
+
+if (RTF_ROWS.length > 0) {
+  html += `
+    <div style="margin-bottom:20px;">
+      <h4 style="margin:0 0 10px 0;font-size:18px;color:#000;text-align:left">
+        <strong><u>Rates & Extra Fees</u></strong>
+      </h4>
+      <div style="display:grid;grid-template-columns:1fr;gap:8px;font-size:16px;text-align:left;">
+        ${RTF_ROWS.join('')}
+      </div>
+    </div>
+    <div style="border-bottom:1px solid #ddd;margin:20px 0;"></div>
+  `;
+}
 
       html += `</div>`;
 
