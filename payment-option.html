@@ -92,6 +92,9 @@ let currentBookingNum = '';
 let currentLastName = '';
 let currentEmail = '';
 let currentOpportunityId = '';
+let currentPickupDate = '';
+let currentTotalCost = '';
+let currentConfirmationAmount = '';
 
 document.getElementById('verify-btn').onclick = async function(e){
   e.preventDefault();
@@ -130,6 +133,10 @@ document.getElementById('verify-btn').onclick = async function(e){
       const data=result.data;
       currentEmail = data.hirerEmail || data.email || '';
       currentOpportunityId = data.opportunityId || '';
+      currentPickupDate = data.pickupDate || '';
+      currentTotalCost = data.totalCost || '';
+      currentConfirmationAmount = getConfirmationAmount(currentTotalCost, currentPickupDate);
+      const daysUntilPickup = getDaysUntilPickup(currentPickupDate);
 
       document.getElementById('loading').style.display='none';
       document.getElementById('booking-details').style.display='block';
@@ -175,6 +182,8 @@ let html = `
               <div><strong>Dropoff Location:</strong> ${data.dropoffLocation || 'N/A'}</div>
               <div><strong>Total Cost:</strong> NZD ${formatCurrency(data.totalCost)}</div>
               <div><strong>Balance Due:</strong> NZD ${formatCurrency(data.totalBalanceDue)}</div>
+              <div><strong>Days Until Pickup:</strong> ${daysUntilPickup != null ? daysUntilPickup : 'N/A'}</div>
+              <div><strong>Pay to Confirm Booking:</strong> NZD ${formatCurrency(currentConfirmationAmount)}</div>
             </div>
           </div>
           <div style="border-bottom:1px solid #ddd;margin:20px 0;"></div>
@@ -300,8 +309,10 @@ RTF_ROWS.push(valIfPresent("Total Rates & Fees", `${formatCurrency(totalRatesAnd
     showError('Connection error');
   }
 };
+
 function payCard() {
-  
+  const amountText = formatCurrency(currentConfirmationAmount);
+
   fetch('https://services.leadconnectorhq.com/hooks/va82O7V3l50t4My9T2zQ/webhook-trigger/acf1cb63-4cc2-40ae-a3b4-382ac926f8be', {
     method: 'POST',
     headers: {
@@ -312,7 +323,8 @@ function payCard() {
       booking: currentBookingNum,
       lastName: currentLastName,
       email: currentEmail,
-      opportunityId: currentOpportunityId
+      opportunityId: currentOpportunityId,
+      confirmationAmount: currentConfirmationAmount
     })
   })
   .catch(err => {
@@ -320,12 +332,14 @@ function payCard() {
   });
 
   document.getElementById('card-msg').innerHTML =
-    "We've notified Waka Campa for your card payment request. A team member will reach out to you shortly for the credit card vault. Please watch out your email for our support. You may now close this window.";
+    `Pay ${amountText} to confirm booking. We've notified Waka Campa for your card payment request. A team member will reach out to you shortly for the credit card vault. Please watch out your email for our support. You may now close this window.`;
 
-  openCardPopup(); // show the dedicated card popup
+  openCardPopup();
 }
 
 function openCardPopup() {
+  document.getElementById('card-msg').innerHTML =
+    `Pay ${formatCurrency(currentConfirmationAmount)} to confirm booking.`;
   document.getElementById('card-popup').style.display = 'block';
 }
 
@@ -334,7 +348,7 @@ function closeCardPopup() {
 }
 
 function closeCardPopupAndCloseTab() {
-  closeCardPopup(); // hide the popup
+  closeCardPopup();
 
   if (window.opener !== null) {
     window.close();
@@ -375,10 +389,9 @@ function submitReceipt() {
   formData.append("email", currentEmail);
   formData.append("opportunityId", currentOpportunityId);
 
-
   fetch('https://n8n.wakacampa.com/webhook/e4ffaa0c-c076-4d23-8b69-9ac0f8d6a6bb', {
     method: "POST",
-    body: formData // Do not set Content-Type header; browser sets it with boundary
+    body: formData
   })
   .then(response => {
     if (!response.ok) throw new Error("Upload failed: " + response.status);
@@ -404,15 +417,14 @@ function submitReceipt() {
   
 function payCrypto(){
 alert(
-'Crypto payment coming soon.\\\\\\\\nBooking: ' +
+'Crypto payment coming soon.\\\\\\\\\\\\\\\\nBooking: ' +
 currentBookingNum +
-'\\\\\\\\nOpportunity ID: ' +
+'\\\\\\\\\\\\\\\\nOpportunity ID: ' +
 currentOpportunityId
 );
 }
   
 function goBackToForm() {
-  // Reset UI as before
   document.getElementById('form-section').style.display='block';
   document.getElementById('loading').style.display='none';
   document.getElementById('booking-details').style.display='none';
@@ -422,13 +434,14 @@ function goBackToForm() {
   document.getElementById('booking-input').value = '';
   document.getElementById('lastname-input').value = '';
 
-  // Clear data
   currentBookingNum = '';
   currentLastName   = '';
   currentEmail      = '';
   currentOpportunityId = '';
+  currentPickupDate = '';
+  currentTotalCost = '';
+  currentConfirmationAmount = '';
 
-  // Then close the tab (or ask them to close)
   if (window.opener !== null) {
     window.close();
   } else {
@@ -451,7 +464,6 @@ function handleBankMethodChange() {
     wiseNoteEl.style.display = "block";
     receiptSectionEl.style.display = "block";
 
-    // Open Wise in new tab, then close this popup after user comes back
     setTimeout(() => {
       window.open("https://wise.com/pay/business/wakacampalimited", "_blank");
     }, 600);
@@ -463,10 +475,8 @@ function handleBankMethodChange() {
   }
 }
 
-// Keep your existing openBankPopup function:
 function openBankPopup(){
   document.getElementById('bank-popup').style.display='block';
-  // reset the selector and sections
   document.getElementById("bank-method").value = "";
   handleBankMethodChange();
 }
@@ -477,7 +487,7 @@ function showError(msg){
   document.getElementById('error').style.display='block';
   document.getElementById('error').innerHTML=msg;
 }
-  function formatDate(dateStr) {
+function formatDate(dateStr) {
   if (!dateStr || dateStr === 'N/A') return 'N/A';
   const date = new Date(dateStr);
   if (isNaN(date.getTime())) return 'N/A';
@@ -485,7 +495,6 @@ function showError(msg){
   return `${months[date.getMonth()]}, ${date.getDate()}, ${date.getFullYear()}`;
 }
 
-// Format currency as "NZD $X,XXX.XX"
 function formatCurrency(amount) {
   if (!amount || amount === 'N/A') return 'N/A';
   const num = parseFloat(amount);
@@ -495,6 +504,35 @@ function formatCurrency(amount) {
     currency: 'NZD',
     minimumFractionDigits: 2 
   }).format(num);
+}
+
+function parseDateOnly(dateStr) {
+  if (!dateStr) return null;
+  const d = new Date(dateStr);
+  if (isNaN(d.getTime())) return null;
+  d.setHours(0, 0, 0, 0);
+  return d;
+}
+
+function getDaysUntilPickup(pickupDateStr) {
+  const pickup = parseDateOnly(pickupDateStr);
+  if (!pickup) return null;
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  const diffMs = pickup.getTime() - today.getTime();
+  return Math.ceil(diffMs / (1000 * 60 * 60 * 24));
+}
+
+function getConfirmationAmount(totalCost, pickupDateStr) {
+  const total = parseFloat(totalCost);
+  if (isNaN(total)) return null;
+
+  const daysUntilPickup = getDaysUntilPickup(pickupDateStr);
+  if (daysUntilPickup == null) return null;
+
+  return daysUntilPickup <= 40 ? total : total * 0.2;
 }
 </script>
 
