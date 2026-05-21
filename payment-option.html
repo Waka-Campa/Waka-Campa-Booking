@@ -128,7 +128,7 @@ document.getElementById('verify-btn').onclick = async function(e){
       result = { success: false, message: 'Booking not found' };
     } else {
       const json = await response.json();
-      result = Array.isArray(json) ? json : json;
+     result = Array.isArray(json) ? json[0] : json;
     }
 
     if (result && result.success && result.data) {
