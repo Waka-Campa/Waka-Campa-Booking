@@ -184,6 +184,8 @@ document.getElementById('verify-btn').onclick = async function(e){
 
       const numberOfDays = data.numberOfDays || null;
       const seasonsDailyRate = data.seasonsDailyRate || null;
+      const ferryCrossing = data.ferryCrossing || null;
+      const queensTownPremiumLocation = data.queensTownPremiumLocation || null;
       const peaceOfMind = data.peaceOfMind || null;
       const riskTaker = data.riskTaker || null;
       const boosterQty = data.boosterQty || null;
@@ -298,7 +300,9 @@ document.getElementById('verify-btn').onclick = async function(e){
         valIfPresent("Daily Rate", seasonsDailyRate, v => ` NZD ${formatCurrency(v)}`),
         valIfPresent("Peace of Mind Package", peaceOfMind, v => ` NZD ${formatCurrency(v)}`),
         valIfPresent("Risk Taker", riskTaker, v => ` NZD ${formatCurrency(v)}`),
+        valIfPresent("Queenstown Premium Location", quuensTownPremiumLocation, v => ` NZD ${formatCurrency(v)}`),
         valIfPresent("Handling & Living Equipment", handlingTotal, v => ` NZD ${formatCurrency(v)}`),
+        valIfPresent("Ferry Crossing", ferryCrossing, v => ` NZD ${formatCurrency(v)}`),
         valIfPresent("Booster Child Seat", boosterQty),
         valIfPresent("Booster Child Seat Amount", boosterTotal, v => ` NZD ${formatCurrency(v)}`),
         valIfPresent("Forward-facing Child Seat", fwdSeatQty),
