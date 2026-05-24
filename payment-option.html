@@ -298,16 +298,10 @@ document.getElementById('verify-btn').onclick = async function(e){
         valIfPresent("Daily Rate", seasonsDailyRate, v => `${formatCurrency(v)} NZD`),
         valIfPresent("Peace of Mind Package", peaceOfMind, v => `${formatCurrency(v)} NZD`),
         valIfPresent("Risk Taker", riskTaker, v => `${formatCurrency(v)} NZD`),
-        valIfPresent("Booster Child Seat Qty", boosterQty),
-        valIfPresent("Booster Child Seat Total Fee", boosterTotal, v => `${formatCurrency(v)} NZD`),
-        valIfPresent("Forward-facing Child Seat Qty", fwdSeatQty),
-        valIfPresent("Forward-facing Child Seat Total Fee", fwdSeatTotal, v => `${formatCurrency(v)} NZD`),
-        valIfPresent("Handling & Living Equipment Total Fee", handlingTotal, v => `${formatCurrency(v)} NZD`),
-        valIfPresent("Snow Chains Qty", chainsQty),
-        valIfPresent("Snow Chains Total Fee", chainsTotal, v => `${formatCurrency(v)} NZD`),
-        (isDisplayValue(taxName) && isDisplayValue(taxAmount))
-          ? `<div><strong>Tax:</strong> ${taxName} (${formatCurrency(taxAmount)} NZD)</div>`
-          : '',
+        valIfPresent("Booster Child Seat", boosterQty, boosterTotal, v => `${formatCurrency(v)} NZD`),
+        valIfPresent("Forward-facing Child Seat", fwdSeatQty, fwdSeatTotal, v => `${formatCurrency(v)} NZD`),
+        valIfPresent("Handling & Living Equipment", handlingTotal, v => `${formatCurrency(v)} NZD`),
+        valIfPresent("Snow Chains", chainsQty, chainsTotal, v => `${formatCurrency(v)} NZD`),
         valIfPresent("Total Rates & Fees", totalRatesAndFees, v => `${formatCurrency(v)} NZD`),
         // Balance Due moved here
         `<div><strong>Balance Due:</strong> NZD ${formatCurrency(data.totalBalanceDue)}</div>`
