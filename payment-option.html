@@ -183,20 +183,20 @@ document.getElementById('verify-btn').onclick = async function(e){
       document.getElementById('booking-details').style.display='block';
 
       const numberOfDays = data.numberOfDays || null;
-      const seasonsDailyRate = data.seasonsDailyRate;
-      const peaceOdMind = data.peaceOfMind || null;
-      const riskTaker = data.riskTaker;
-      const boosterQty = data.boosterQty;
-      const boosterTotal = data.boosterTotal;
-      const fwdSeatQty = data.fwdSeatQty;
-      const fwdSeatTotal = data.fwdSeatTotal;
-      const handlingQty = data.handlingQty;
-      const handlingTotal = data.handlingTotal;
-      const chainsQty = data.chainsQty;
-      const chainsTotal = data.chainsTotal;
+      const seasonsDailyRate = data.seasonsDailyRate || null;
+      const peaceOFMind = data.peaceOfMind || null;
+      const riskTaker = data.riskTaker || null;
+      const boosterQty = data.boosterQty || null;
+      const boosterTotal = data.boosterTotal || null;
+      const fwdSeatQty = data.fwdSeatQty || null;
+      const fwdSeatTotal = data.fwdSeatTotal || null;
+      const handlingQty = data.handlingQty || null;
+      const handlingTotal = data.handlingTotal || null;
+      const chainsQty = data.chainsQty || null;
+      const chainsTotal = data.chainsTotal || null;
       const taxName = data.taxName || null;
-      const taxAmount = data.taxAmount;
-      const totalRatesAndFees = data.totalRatesAndFees;
+      const taxAmount = data.taxAmount || null;
+      const totalRatesAndFees = data.totalRatesAndFees || null;
 
       function isDisplayValue(value) {
         return value !== null &&
