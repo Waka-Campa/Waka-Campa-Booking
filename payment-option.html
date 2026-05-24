@@ -298,10 +298,13 @@ document.getElementById('verify-btn').onclick = async function(e){
         valIfPresent("Daily Rate", seasonsDailyRate, v => ` NZD ${formatCurrency(v)}`),
         valIfPresent("Peace of Mind Package", peaceOfMind, v => ` NZD ${formatCurrency(v)}`),
         valIfPresent("Risk Taker", riskTaker, v => ` NZD ${formatCurrency(v)}`),
-        valIfPresent("Booster Child Seat", boosterQty, boosterTotal, v => ` NZD ${formatCurrency(v)}`),
-        valIfPresent("Forward-facing Child Seat", fwdSeatQty, fwdSeatTotal, v => ` NZD ${formatCurrency(v)}`),
         valIfPresent("Handling & Living Equipment", handlingTotal, v => ` NZD ${formatCurrency(v)}`),
-        valIfPresent("Snow Chains", chainsQty, chainsTotal, v => ` NZD ${formatCurrency(v)} NZD`),
+        valIfPresent("Booster Child Seat", boosterQty),
+        valIfPresent("Booster Child Seat Amount", boosterTotal, v => ` NZD ${formatCurrency(v)}`),
+        valIfPresent("Forward-facing Child Seat", fwdSeatQty),
+        valIfPresent("Forward-facing Child Seat Amount", fwdSeatTotal, v => ` NZD ${formatCurrency(v)}`),
+        valIfPresent("Snow Chains", chainsQty),
+        valIfPresent("Snow Chains Amount", chainsTotal, v => ` NZD ${formatCurrency(v)}`),
         valIfPresent("Total Rates & Fees", totalRatesAndFees, v => ` NZD ${formatCurrency(v)}`),
         // Balance Due moved here
         `<div><strong>Balance Due:</strong> NZD ${formatCurrency(data.totalBalanceDue)}</div>`
