@@ -184,8 +184,8 @@ document.getElementById('verify-btn').onclick = async function(e){
 
       const numberOfDays = data.numberOfDays || null;
       const seasonsDailyRate = data.seasonsDailyRate;
-      const insuranceName = data.insuranceName || null;
-      const insuranceAmount = data.insuranceAmount;
+      const peaceOdMind = data.peaceOfMind || null;
+      const riskTaker = data.riskTaker;
       const boosterQty = data.boosterQty;
       const boosterTotal = data.boosterTotal;
       const fwdSeatQty = data.fwdSeatQty;
@@ -296,9 +296,8 @@ document.getElementById('verify-btn').onclick = async function(e){
       const RTF_ROWS = [
         valIfPresent("Number of Days", numberOfDays),
         valIfPresent("Daily Rate", seasonsDailyRate, v => `${formatCurrency(v)} NZD`),
-        (isDisplayValue(insuranceName) && isDisplayValue(insuranceAmount))
-          ? `<div><strong>Insurance:</strong> ${insuranceName} (${formatCurrency(insuranceAmount)} NZD)</div>`
-          : '',
+        valIfPresent("Peace of Mind Package", peaceOfMind, v => `${formatCurrency(v)} NZD`),
+        valIfPresent("Risk Taker", riskTaker, v => `${formatCurrency(v)} NZD`),
         valIfPresent("Booster Child Seat Qty", boosterQty),
         valIfPresent("Booster Child Seat Total Fee", boosterTotal, v => `${formatCurrency(v)} NZD`),
         valIfPresent("Forward-facing Child Seat Qty", fwdSeatQty),
