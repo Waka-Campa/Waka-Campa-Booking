@@ -192,9 +192,9 @@ document.getElementById('verify-btn').onclick = async function(e){
       const handlingTotal     = data.handlingTotal     || null;
       const chainsQty         = data.chainsQty         || null;
       const chainsTotal       = data.chainsTotal       || null;
-      const taxName           = data.taxName           || null;
-      const taxAmount         = data.taxAmount         || null;
       const totalRatesAndFees = data.totalRatesAndFees || null;
+      const ferryCrossing     = data.ferryCrossing     || null;
+      const queensTownPremiumLocation = data.queensTownPremiumLocation || null;
 
       function isDisplayValue(value) {
         return value !== null &&
@@ -295,16 +295,15 @@ document.getElementById('verify-btn').onclick = async function(e){
         valIfPresent("Daily Rate", seasonsDailyRate, v => formatCurrency(v)),
         valIfPresent("Peace of Mind Package", peaceOfMind, v => formatCurrency(v)),
         valIfPresent("Risk Taker", riskTaker, v => formatCurrency(v)),
-        valIfPresent("Booster Child Seat Qty", boosterQty),
-        valIfPresent("Booster Child Seat Total Fee", boosterTotal, v => formatCurrency(v)),
-        valIfPresent("Forward-facing Child Seat Qty", fwdSeatQty),
-        valIfPresent("Forward-facing Child Seat Total Fee", fwdSeatTotal, v => formatCurrency(v)),
-        valIfPresent("Handling & Living Equipment Total Fee", handlingTotal, v => formatCurrency(v)),
-        valIfPresent("Snow Chains Qty", chainsQty),
-        valIfPresent("Snow Chains Total Fee", chainsTotal, v => formatCurrency(v)),
-        (isDisplayValue(taxName) && isDisplayValue(taxAmount))
-          ? `<div><strong>Tax:</strong> ${taxName} — ${formatCurrency(taxAmount)}</div>`
-          : '',
+        valIfPresent("Handling & Living Equipment", handlingTotal, v => formatCurrency(v)),
+        valIfPresent("Ferry Crossing", ferryCrossing, v => formatCurrency(v)),
+        valIfPresent("Queenstown Premium Location", queensTownPremiumLocation, v => formatCurrency(v)),
+        valIfPresent("Booster Child Seat", boosterQty),
+        valIfPresent("Booster Child Seat Amount", boosterTotal, v => formatCurrency(v)),
+        valIfPresent("Forward-facing Child", fwdSeatQty),
+        valIfPresent("Forward-facing Child Seat Amount", fwdSeatTotal, v => formatCurrency(v)),
+        valIfPresent("Snow Chains", chainsQty),
+        valIfPresent("Snow Chains Amount", chainsTotal, v => formatCurrency(v)),
         valIfPresent("Total Rates & Fees", totalRatesAndFees, v => formatCurrency(v)),
         `<div><strong>Balance Due:</strong> ${formatCurrency(data.totalBalanceDue)}</div>`
       ].filter(Boolean);
