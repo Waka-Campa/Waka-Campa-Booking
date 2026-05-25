@@ -225,7 +225,7 @@ function handleDetailsCorrect() {
   document.getElementById('confirmation-buttons').style.display = 'none';
 
   const cacheBuster = Date.now();
-  const surveyUrl = `https://api.leadconnectorhq.com/widget/survey/Z72YgsQdLM9n2lfu6DTD?email=${encodeURIComponent(currentEmail)}&t=${cacheBuster}`;
+  const surveyUrl = `https://api.leadconnectorhq.com/widget/survey/Z72YgsQdLM9n2lfu6DTD?booking_number=${encodeURIComponent(currentBookingNum)}&email=${encodeURIComponent(currentEmail)}&t=${cacheBuster}`;
 
   const iframe = document.createElement('iframe');
   iframe.src = surveyUrl;
