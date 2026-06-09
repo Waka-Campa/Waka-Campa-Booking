@@ -54,6 +54,14 @@ document.getElementById('booking-input').addEventListener('input', function() {
   this.value = this.value.replace(/[^0-9]/g, '');
 });
 
+// Submit on Enter key from either input field
+document.getElementById('booking-input').addEventListener('keydown', function(e) {
+  if (e.key === 'Enter') document.getElementById('verify-btn').click();
+});
+document.getElementById('lastname-input').addEventListener('keydown', function(e) {
+  if (e.key === 'Enter') document.getElementById('verify-btn').click();
+});
+
 // Helper: renders a field row only if value is non-empty and not 'N/A'
 function field(label, value) {
   if (!value || String(value).trim() === '' || String(value).trim() === 'N/A') return '';
@@ -238,15 +246,15 @@ function handleDetailsCorrect() {
   document.getElementById('confirmation-buttons').style.display = 'none';
 
   const cacheBuster = Date.now();
-  const surveyUrl = `https://api.leadconnectorhq.com/widget/survey/VrgPS6LDk02RaQPNfUJY?email=${encodeURIComponent(currentEmail)}&t=${cacheBuster}`;
+  const surveyUrl = `https://api.leadconnectorhq.com/widget/survey/VrgPS6LDk02RaQPNfUJY?email=${encodeURIComponent(currentEmail)}&t=${cacheBuster}&nocache=${Math.random()}`;
 
-  // Remove old form_embed.js to force fresh reload
+  // Always remove old embed script to reset its internal state
   const oldScript = document.querySelector('script[src*="form_embed.js"]');
   if (oldScript) oldScript.remove();
 
-  // Clear GHL form cache
-  if (window.hasOwnProperty('hl_form_configs')) delete window.hl_form_configs;
-  if (window.hasOwnProperty('LeadConnector')) delete window.LeadConnector;
+  // Clear and rebuild the iframe container entirely
+  const container = document.getElementById('survey-iframe');
+  container.innerHTML = '';
 
   const iframe = document.createElement('iframe');
   iframe.src = surveyUrl;
@@ -258,10 +266,10 @@ function handleDetailsCorrect() {
   iframe.id = 'VrgPS6LDk02RaQPNfUJY';
   iframe.title = 'survey';
 
-  document.getElementById('survey-iframe').innerHTML = '';
-  document.getElementById('survey-iframe').appendChild(iframe);
-  document.getElementById('survey-iframe').style.display = 'block';
+  container.appendChild(iframe);
+  container.style.display = 'block';
 
+  // Re-inject embed script AFTER the new iframe is in the DOM
   const script = document.createElement('script');
   script.src = `https://link.msgsndr.com/js/form_embed.js?t=${cacheBuster}`;
   document.head.appendChild(script);
