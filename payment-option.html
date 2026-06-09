@@ -626,6 +626,10 @@ function computeConfirmAmount(pickupDateStr, totalCostNumber, balanceDueNumber) 
       isPartial: true,
       fullFormatted: formatCurrency(totalCostNumber)
     };
+    // Only allow numbers in booking input
+document.getElementById('booking-input').addEventListener('input', function() {
+  this.value = this.value.replace(/[^0-9]/g, '');
+});
   }
 }
 </script>
