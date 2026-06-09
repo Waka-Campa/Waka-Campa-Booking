@@ -116,17 +116,6 @@ Submit Receipt
 </div>
 
 <script>
-   // Submit on Enter key from either input field
-  document.getElementById('booking-input').addEventListener('keydown', function(e) {
-  if (e.key === 'Enter') document.getElementById('verify-btn').click();
-});
-document.getElementById('lastname-input').addEventListener('keydown', function(e) {
-  if (e.key === 'Enter') document.getElementById('verify-btn').click();
-});
-// Only allow numbers in booking input
-document.getElementById('booking-input').addEventListener('input', function() {
-  this.value = this.value.replace(/[^0-9]/g, '');
-});
 let currentBookingNum = '';
 let currentLastName = '';
 let currentEmail = '';
