@@ -48,7 +48,10 @@ body { margin: 0; padding: 20px; background: #f5f5f5; }
 let currentBookingNum = '';
 let currentLastName = '';
 let currentEmail = '';
-
+// Only allow numbers in booking input
+document.getElementById('booking-input').addEventListener('input', function() {
+  this.value = this.value.replace(/[^0-9]/g, '');
+});
 // Submit on Enter key from either input field
 document.getElementById('booking-input').addEventListener('keydown', function(e) {
   if (e.key === 'Enter') document.getElementById('verify-btn').click();
