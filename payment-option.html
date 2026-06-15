@@ -209,6 +209,9 @@ document.getElementById('verify-btn').onclick = async function(e){
       const freeOneWay                = data.freeOneWay                || null;
       const freeWinterPack            = data.freeWinterPack            || null;
       const cardProcessingFee         = data.cardProcessingFee         || null;
+      const excess         = data.excess         || null;
+      const repairs         = data.repairs         || null;
+      const fineandadminfee         = data.fineandadminfee         || null;
 
       function isDisplayValue(value) {
         if (value === null || value === undefined || value === '' || value === 'N/A') return false;
@@ -373,6 +376,9 @@ document.getElementById('verify-btn').onclick = async function(e){
         valIfPresent("Booster Child Seat (Age 4-7)",     boosterTotal,              v => formatCurrency(v)),
         valIfPresent("Forward-facing Child Seat (Age 1-4)", fwdSeatTotal,           v => formatCurrency(v)),
         valIfPresent("Snow Chains",                      chainsTotal,               v => formatCurrency(v)),
+        valIfPresent("Excess",                      excess,               v => formatCurrency(v)),
+        valIfPresent("Repairs",                      repairs,               v => formatCurrency(v)),
+        valIfPresent("Fine and Administration fee",                      fineandadminfee,               v => formatCurrency(v)),
         valIfPresent("Card Processing Fee (3.7%)",       cardProcessingFee,         v => formatCurrency(v)),
       ].filter(Boolean);
 
