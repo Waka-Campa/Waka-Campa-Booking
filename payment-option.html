@@ -191,6 +191,7 @@ document.getElementById('verify-btn').onclick = async function(e){
       document.getElementById('loading').style.display='none';
       document.getElementById('booking-details').style.display='block';
 
+      // Raw values
       const numberOfDays              = data.numberOfDays              || null;
       const seasonsDailyRate          = data.seasonsDailyRate          || null;
       const peaceOfMind               = data.peaceOfMind               || null;
@@ -207,21 +208,72 @@ document.getElementById('verify-btn').onclick = async function(e){
       const specialDiscount           = data.specialDiscount           || null;
       const freeOneWay                = data.freeOneWay                || null;
       const freeWinterPack            = data.freeWinterPack            || null;
-      const cardProcessingFee         =data.cardProcessingFee          || null;
+      const cardProcessingFee         = data.cardProcessingFee         || null;
+
       function isDisplayValue(value) {
         if (value === null || value === undefined || value === '' || value === 'N/A') return false;
         const num = parseFloat(value);
-        // Show zeros only if it's a string that's not a number (e.g. text fields)
-        // Hide numeric zero values
         if (!isNaN(num) && num === 0) return false;
         return true;
       }
 
+      // Standard row: label + formatted value
       function valIfPresent(label, value, formatter = null) {
         if (!isDisplayValue(value)) return '';
         const formatted = formatter ? formatter(value) : String(value);
         if (!formatted || formatted === 'N/A') return '';
-        return `<div><strong>${label}:</strong> ${formatted}</div>`;
+        return `<div style="display:flex;justify-content:space-between;align-items:baseline;gap:8px;">
+          <span><strong>${label}</strong></span>
+          <span style="text-align:right;">${formatted}</span>
+        </div>`;
+      }
+
+      // Rate row with "Xdays @ $Y/day" format
+      function rateRow(label, totalValue, days) {
+        if (!isDisplayValue(totalValue)) return '';
+        const totalNum = parseFloat(totalValue);
+        const daysNum  = parseInt(days);
+        if (isNaN(totalNum)) return '';
+        // If we have valid days, compute daily rate and show the breakdown
+        if (daysNum && daysNum > 0) {
+          const dailyRate = totalNum / daysNum;
+          return `<div style="display:flex;justify-content:space-between;align-items:baseline;gap:8px;">
+            <span><strong>${label}</strong> <span style="color:#666;font-size:14px;">${daysNum} days @ ${formatCurrency(dailyRate)}/day</span></span>
+            <span style="text-align:right;">${formatCurrency(totalNum)}</span>
+          </div>`;
+        }
+        // Fallback if no days: just show total
+        return `<div style="display:flex;justify-content:space-between;align-items:baseline;gap:8px;">
+          <span><strong>${label}</strong></span>
+          <span style="text-align:right;">${formatCurrency(totalNum)}</span>
+        </div>`;
+      }
+
+      // Daily rate row (value IS already the per-day rate, not a total)
+      function dailyRateRow(label, dailyRateValue, days) {
+        if (!isDisplayValue(dailyRateValue)) return '';
+        const rateNum = parseFloat(dailyRateValue);
+        const daysNum = parseInt(days);
+        if (isNaN(rateNum)) return '';
+        if (daysNum && daysNum > 0) {
+          const total = rateNum * daysNum;
+          return `<div style="display:flex;justify-content:space-between;align-items:baseline;gap:8px;">
+            <span><strong>${label}</strong> <span style="color:#666;font-size:14px;">${daysNum} days @ ${formatCurrency(rateNum)}/day</span></span>
+            <span style="text-align:right;">${formatCurrency(total)}</span>
+          </div>`;
+        }
+        return `<div style="display:flex;justify-content:space-between;align-items:baseline;gap:8px;">
+          <span><strong>${label}</strong></span>
+          <span style="text-align:right;">${formatCurrency(rateNum)}</span>
+        </div>`;
+      }
+
+      function sectionHeader(title) {
+        return `<div style="margin:18px 0 8px 0;">
+          <h4 style="margin:0;font-size:16px;color:#000;border-bottom:1px solid #eee;padding-bottom:6px;">
+            <strong><u>${title}</u></strong>
+          </h4>
+        </div>`;
       }
 
       let html = `
@@ -303,39 +355,77 @@ document.getElementById('verify-btn').onclick = async function(e){
         `;
       }
 
-      const RTF_ROWS = [
-        valIfPresent("Number of Days",                  numberOfDays),
-        valIfPresent("Daily Rate",                      seasonsDailyRate,          v => formatCurrency(v)),
-        valIfPresent("Peace of Mind Package",           peaceOfMind,               v => formatCurrency(v)),
-        valIfPresent("Risk Taker",                      riskTaker,                 v => formatCurrency(v)),
-        valIfPresent("Handling & Living Equipment",     handlingTotal,             v => formatCurrency(v)),
-        valIfPresent("Ferry Crossing",                  ferryCrossing,             v => formatCurrency(v)),
-        valIfPresent("Queenstown Premium Location",     queensTownPremiumLocation, v => formatCurrency(v)),
-        valIfPresent("One-way Rental",                  oneWayRental,              v => formatCurrency(v)),
-        valIfPresent("Booster child seat (Age 4-7)",       boosterTotal,              v => formatCurrency(v)),
-        valIfPresent("Forward-facing child seat (Age 1-4)",fwdSeatTotal,              v => formatCurrency(v)),
-        valIfPresent("Snow Chains",              chainsTotal,               v => formatCurrency(v)),
-        valIfPresent("Discount",                        discount,                  v => formatCurrency(v)),
-        valIfPresent("Special Discount",                specialDiscount,           v => formatCurrency(v)),
-        valIfPresent("FREE One-way",                    freeOneWay,                v => formatCurrency(v)),
-        valIfPresent("FREE Winter Pack",                freeWinterPack,            v => formatCurrency(v)),
-        valIfPresent("Total Rates & Fees",              totalRatesAndFees,         v => formatCurrency(v)),
-        valIfPresent("Card Processing Fee (3.7%)",      cardProcessingFee,         v => formatCurrency(v)),
-        `<div><strong>Balance Due:</strong> ${formatCurrency(data.totalBalanceDue)}</div>`
+      // ── Build the three sub-sections ──────────────────────────────────────
+
+      // RATES: Daily Rate (per-day value × days), Peace of Mind (total ÷ days → per-day × days)
+      const RATES_ROWS = [
+        dailyRateRow("Daily Rate",            seasonsDailyRate, numberOfDays),
+        rateRow(     "Peace of Mind Package", peaceOfMind,      numberOfDays),
+        valIfPresent("Risk Taker",            riskTaker,        v => formatCurrency(v)),
       ].filter(Boolean);
 
-      if (RTF_ROWS.length > 0) {
+      // FEES: everything except rates and discounts
+      const FEES_ROWS = [
+        valIfPresent("Handling & Living Equipment",      handlingTotal,             v => formatCurrency(v)),
+        valIfPresent("Ferry Crossing",                   ferryCrossing,             v => formatCurrency(v)),
+        valIfPresent("Queenstown Premium Location",      queensTownPremiumLocation, v => formatCurrency(v)),
+        valIfPresent("One-way Rental",                   oneWayRental,              v => formatCurrency(v)),
+        valIfPresent("Booster Child Seat (Age 4-7)",     boosterTotal,              v => formatCurrency(v)),
+        valIfPresent("Forward-facing Child Seat (Age 1-4)", fwdSeatTotal,           v => formatCurrency(v)),
+        valIfPresent("Snow Chains",                      chainsTotal,               v => formatCurrency(v)),
+        valIfPresent("Card Processing Fee (3.7%)",       cardProcessingFee,         v => formatCurrency(v)),
+      ].filter(Boolean);
+
+      // DISCOUNTS: negative/promo fields
+      const DISCOUNTS_ROWS = [
+        valIfPresent("Discount",         discount,       v => formatCurrency(v)),
+        valIfPresent("Special Discount", specialDiscount,v => formatCurrency(v)),
+        valIfPresent("FREE One-way",     freeOneWay,     v => formatCurrency(v)),
+        valIfPresent("FREE Winter Pack", freeWinterPack, v => formatCurrency(v)),
+      ].filter(Boolean);
+
+      const hasRFSection = RATES_ROWS.length > 0 || FEES_ROWS.length > 0 || DISCOUNTS_ROWS.length > 0 || isDisplayValue(totalRatesAndFees) || isDisplayValue(data.totalBalanceDue);
+
+      if (hasRFSection) {
         html += `
           <div style="margin-bottom:20px;">
-            <h4 style="margin:0 0 10px 0;font-size:18px;color:#000;text-align:left">
-              <strong><u>Rates & Extra Fees</u></strong>
-            </h4>
-            <div style="display:grid;grid-template-columns:1fr;gap:8px;font-size:16px;text-align:left;">
-              ${RTF_ROWS.join('')}
-            </div>
-          </div>
-          <div style="border-bottom:1px solid #ddd;margin:20px 0;"></div>
+            <h4 style="margin:0 0 4px 0;font-size:18px;color:#000;text-align:left"><strong><u>Rates & Extra Fees</u></strong></h4>
+            <div style="font-size:16px;">
         `;
+
+        if (RATES_ROWS.length > 0) {
+          html += sectionHeader('Rates');
+          html += `<div style="display:grid;grid-template-columns:1fr;gap:8px;">${RATES_ROWS.join('')}</div>`;
+        }
+
+        if (FEES_ROWS.length > 0) {
+          html += sectionHeader('Fees');
+          html += `<div style="display:grid;grid-template-columns:1fr;gap:8px;">${FEES_ROWS.join('')}</div>`;
+        }
+
+        if (DISCOUNTS_ROWS.length > 0) {
+          html += sectionHeader('Discounts');
+          html += `<div style="display:grid;grid-template-columns:1fr;gap:8px;">${DISCOUNTS_ROWS.join('')}</div>`;
+        }
+
+        // Summary totals
+        html += `
+          <div style="margin-top:18px;border-top:2px solid #000;padding-top:12px;display:grid;grid-template-columns:1fr;gap:8px;">
+        `;
+        if (isDisplayValue(totalRatesAndFees)) {
+          html += `<div style="display:flex;justify-content:space-between;align-items:baseline;gap:8px;">
+            <span><strong>Total Rates & Fees</strong></span>
+            <span style="text-align:right;font-weight:bold;">${formatCurrency(totalRatesAndFees)}</span>
+          </div>`;
+        }
+        html += `<div style="display:flex;justify-content:space-between;align-items:baseline;gap:8px;">
+            <span><strong>Balance Due</strong></span>
+            <span style="text-align:right;font-weight:bold;font-size:18px;color:#000;">${formatCurrency(data.totalBalanceDue)}</span>
+          </div>`;
+        html += `</div>`; // end summary
+
+        html += `</div></div>`; // end inner + section div
+        html += `<div style="border-bottom:1px solid #ddd;margin:20px 0;"></div>`;
       }
 
       html += `</div>`;
