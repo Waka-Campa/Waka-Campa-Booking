@@ -400,12 +400,12 @@ document.getElementById('verify-btn').onclick = async function(e){
         `;
 
         if (RATES_ROWS.length > 0) {
-          html += sectionHeader('Rates');
+          html += sectionHeader('Daily Rates');
           html += `<div style="display:grid;grid-template-columns:1fr;gap:8px;">${RATES_ROWS.join('')}</div>`;
         }
 
         if (FEES_ROWS.length > 0) {
-          html += sectionHeader('Fees');
+          html += sectionHeader('Extra Fees');
           html += `<div style="display:grid;grid-template-columns:1fr;gap:8px;">${FEES_ROWS.join('')}</div>`;
         }
 
