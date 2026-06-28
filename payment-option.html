@@ -209,9 +209,9 @@ document.getElementById('verify-btn').onclick = async function(e){
       const freeOneWay                = data.freeOneWay                || null;
       const freeWinterPack            = data.freeWinterPack            || null;
       const cardProcessingFee         = data.cardProcessingFee         || null;
-      const excess         = data.excess         || null;
-      const repairs         = data.repairs         || null;
-      const fineandadminfee         = data.fineandadminfee         || null;
+      const excess                    = data.excess                    || null;
+      const repairs                   = data.repairs                   || null;
+      const fineandadminfee           = data.fineandadminfee           || null;
 
       function isDisplayValue(value) {
         if (value === null || value === undefined || value === '' || value === 'N/A') return false;
@@ -220,7 +220,6 @@ document.getElementById('verify-btn').onclick = async function(e){
         return true;
       }
 
-      // Standard row: label + formatted value
       function valIfPresent(label, value, formatter = null) {
         if (!isDisplayValue(value)) return '';
         const formatted = formatter ? formatter(value) : String(value);
@@ -231,13 +230,11 @@ document.getElementById('verify-btn').onclick = async function(e){
         </div>`;
       }
 
-      // Rate row with "Xdays @ $Y/day" format
       function rateRow(label, totalValue, days) {
         if (!isDisplayValue(totalValue)) return '';
         const totalNum = parseFloat(totalValue);
         const daysNum  = parseInt(days);
         if (isNaN(totalNum)) return '';
-        // If we have valid days, compute daily rate and show the breakdown
         if (daysNum && daysNum > 0) {
           const dailyRate = totalNum / daysNum;
           return `<div style="display:flex;justify-content:space-between;align-items:baseline;gap:8px;">
@@ -245,14 +242,12 @@ document.getElementById('verify-btn').onclick = async function(e){
             <span style="text-align:right;">${formatCurrency(totalNum)}</span>
           </div>`;
         }
-        // Fallback if no days: just show total
         return `<div style="display:flex;justify-content:space-between;align-items:baseline;gap:8px;">
           <span><strong>${label}</strong></span>
           <span style="text-align:right;">${formatCurrency(totalNum)}</span>
         </div>`;
       }
 
-      // Daily rate row (value IS already the per-day rate, not a total)
       function dailyRateRow(label, dailyRateValue, days) {
         if (!isDisplayValue(dailyRateValue)) return '';
         const rateNum = parseFloat(dailyRateValue);
@@ -358,36 +353,31 @@ document.getElementById('verify-btn').onclick = async function(e){
         `;
       }
 
-      // ── Build the three sub-sections ──────────────────────────────────────
-
-      // RATES: Daily Rate (per-day value × days), Peace of Mind (total ÷ days → per-day × days)
       const RATES_ROWS = [
         dailyRateRow("Daily Rate",            seasonsDailyRate, numberOfDays),
         rateRow(     "Peace of Mind Package", peaceOfMind,      numberOfDays),
         valIfPresent("Risk Taker",            riskTaker,        v => formatCurrency(v)),
       ].filter(Boolean);
 
-      // FEES: everything except rates and discounts
       const FEES_ROWS = [
-        valIfPresent("Handling & Living Equipment",      handlingTotal,             v => formatCurrency(v)),
-        valIfPresent("Ferry Crossing",                   ferryCrossing,             v => formatCurrency(v)),
-        valIfPresent("Queenstown Premium Location",      queensTownPremiumLocation, v => formatCurrency(v)),
-        valIfPresent("One-way Rental",                   oneWayRental,              v => formatCurrency(v)),
-        valIfPresent("Booster Child Seat (Age 4-7)",     boosterTotal,              v => formatCurrency(v)),
-        valIfPresent("Forward-facing Child Seat (Age 1-4)", fwdSeatTotal,           v => formatCurrency(v)),
-        valIfPresent("Snow Chains",                      chainsTotal,               v => formatCurrency(v)),
-        valIfPresent("Excess",                      excess,               v => formatCurrency(v)),
-        valIfPresent("Repairs",                      repairs,               v => formatCurrency(v)),
-        valIfPresent("Fine and Administration fee",                      fineandadminfee,               v => formatCurrency(v)),
-        valIfPresent("Card Processing Fee (3.7%)",       cardProcessingFee,         v => formatCurrency(v)),
+        valIfPresent("Handling & Living Equipment",         handlingTotal,             v => formatCurrency(v)),
+        valIfPresent("Ferry Crossing",                      ferryCrossing,             v => formatCurrency(v)),
+        valIfPresent("Queenstown Premium Location",         queensTownPremiumLocation, v => formatCurrency(v)),
+        valIfPresent("One-way Rental",                      oneWayRental,              v => formatCurrency(v)),
+        valIfPresent("Booster Child Seat (Age 4-7)",        boosterTotal,              v => formatCurrency(v)),
+        valIfPresent("Forward-facing Child Seat (Age 1-4)", fwdSeatTotal,              v => formatCurrency(v)),
+        valIfPresent("Snow Chains",                         chainsTotal,               v => formatCurrency(v)),
+        valIfPresent("Excess",                              excess,                    v => formatCurrency(v)),
+        valIfPresent("Repairs",                             repairs,                   v => formatCurrency(v)),
+        valIfPresent("Fine and Administration fee",         fineandadminfee,           v => formatCurrency(v)),
+        valIfPresent("Card Processing Fee (3.7%)",          cardProcessingFee,         v => formatCurrency(v)),
       ].filter(Boolean);
 
-      // DISCOUNTS: negative/promo fields
       const DISCOUNTS_ROWS = [
-        valIfPresent("Discount",         discount,       v => formatCurrency(v)),
-        valIfPresent("Special Discount", specialDiscount,v => formatCurrency(v)),
-        valIfPresent("FREE One-way",     freeOneWay,     v => formatCurrency(v)),
-        valIfPresent("FREE Winter Pack", freeWinterPack, v => formatCurrency(v)),
+        valIfPresent("Discount",         discount,        v => formatCurrency(v)),
+        valIfPresent("Special Discount", specialDiscount, v => formatCurrency(v)),
+        valIfPresent("FREE One-way",     freeOneWay,      v => formatCurrency(v)),
+        valIfPresent("FREE Winter Pack", freeWinterPack,  v => formatCurrency(v)),
       ].filter(Boolean);
 
       const hasRFSection = RATES_ROWS.length > 0 || FEES_ROWS.length > 0 || DISCOUNTS_ROWS.length > 0 || isDisplayValue(totalRatesAndFees) || isDisplayValue(data.totalBalanceDue);
@@ -414,7 +404,6 @@ document.getElementById('verify-btn').onclick = async function(e){
           html += `<div style="display:grid;grid-template-columns:1fr;gap:8px;">${DISCOUNTS_ROWS.join('')}</div>`;
         }
 
-        // Summary totals
         html += `
           <div style="margin-top:18px;border-top:2px solid #000;padding-top:12px;display:grid;grid-template-columns:1fr;gap:8px;">
         `;
@@ -428,9 +417,8 @@ document.getElementById('verify-btn').onclick = async function(e){
             <span><strong>Balance Due</strong></span>
             <span style="text-align:right;font-weight:bold;font-size:18px;color:#000;">${formatCurrency(data.totalBalanceDue)}</span>
           </div>`;
-        html += `</div>`; // end summary
-
-        html += `</div></div>`; // end inner + section div
+        html += `</div>`;
+        html += `</div></div>`;
         html += `<div style="border-bottom:1px solid #ddd;margin:20px 0;"></div>`;
       }
 
@@ -718,19 +706,38 @@ function computeConfirmAmount(pickupDateStr, totalCostNumber, balanceDueNumber) 
   if (!totalCostNumber || isNaN(totalCostNumber)) {
     return { amount: null, formatted: '', isPartial: false, fullFormatted: '' };
   }
-  const balanceDue = (balanceDueNumber && !isNaN(balanceDueNumber)) ? balanceDueNumber : totalCostNumber;
-  const today = new Date();
-  const start = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+
+  const balanceDue = (balanceDueNumber && !isNaN(balanceDueNumber))
+    ? balanceDueNumber
+    : totalCostNumber;
+
+  // If balanceDue is already less than totalCost, a deposit was collected by
+  // an agent. Never show a partial option — just show the remaining balance due.
+  const depositAlreadyPaid = balanceDue < (totalCostNumber - 0.01);
+  if (depositAlreadyPaid) {
+    return {
+      amount: balanceDue,
+      formatted: formatCurrency(balanceDue),
+      isPartial: false,
+      fullFormatted: formatCurrency(balanceDue)
+    };
+  }
+
+  const today  = new Date();
+  const start  = new Date(today.getFullYear(), today.getMonth(), today.getDate());
   const pickup = new Date(pickupDateStr);
+
   if (isNaN(pickup.getTime())) {
     return { amount: balanceDue, formatted: formatCurrency(balanceDue), isPartial: false, fullFormatted: formatCurrency(balanceDue) };
   }
-  const oneDay = 1000 * 60 * 60 * 24;
-  const diffMs = pickup.getTime() - start.getTime();
-  const diffDays = Math.ceil(diffMs / oneDay);
+
+  const diffDays = Math.ceil((pickup.getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
+
   if (diffDays <= 40) {
+    // Within 40 days — full balance due, no partial option
     return { amount: balanceDue, formatted: formatCurrency(balanceDue), isPartial: false, fullFormatted: formatCurrency(balanceDue) };
   } else {
+    // More than 40 days away AND no deposit paid yet — offer 20% partial
     const partial = Math.round((totalCostNumber * 0.20) * 100) / 100;
     return {
       amount: partial,
