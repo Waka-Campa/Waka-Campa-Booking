@@ -370,6 +370,12 @@
       Please complete the form below. Your booking details will be pre-filled automatically.
     </p>
     <div id="survey-iframe-license"></div>
+    <div id="manual-done-license" style="display:none;margin-top:16px;text-align:center;">
+      <p style="color:#666;font-size:13px;margin-bottom:10px;">Already submitted the form above?</p>
+      <button class="btn-primary" onclick="manualComplete('license')" style="font-size:15px;padding:12px;">
+        ✅ I've submitted — Mark as Done
+      </button>
+    </div>
   </div>
 </div>
 
@@ -383,6 +389,12 @@
       Add details for any additional drivers on your booking.
     </p>
     <div id="survey-iframe-drivers"></div>
+    <div id="manual-done-drivers" style="display:none;margin-top:16px;text-align:center;">
+      <p style="color:#666;font-size:13px;margin-bottom:10px;">Already submitted the form above?</p>
+      <button class="btn-primary" onclick="manualComplete('drivers')" style="font-size:15px;padding:12px;">
+        ✅ I've submitted — Mark as Done
+      </button>
+    </div>
   </div>
 </div>
 
@@ -396,6 +408,12 @@
       Watch the videos and complete the form to confirm you have viewed them.
     </p>
     <div id="survey-iframe-videos"></div>
+    <div id="manual-done-videos" style="display:none;margin-top:16px;text-align:center;">
+      <p style="color:#666;font-size:13px;margin-bottom:10px;">Already submitted the form above?</p>
+      <button class="btn-primary" onclick="manualComplete('videos')" style="font-size:15px;padding:12px;">
+        ✅ I've submitted — Mark as Done
+      </button>
+    </div>
   </div>
 </div>
 
@@ -551,9 +569,9 @@ function openFormOverlay(type) {
 
   // Survey IDs — replace these with real IDs when ready
   const surveyIds = {
-    license: 'msvAaM2jMlXUWySQwEOH',
-    drivers: '53xc9WpBaSAQY3heDE6t',
-    videos:  'H9bQ6Vs5VAZfHxogY0eY',
+    license: 'PLACEHOLDER_LICENSE_FORM_ID',
+    drivers: 'PLACEHOLDER_DRIVERS_FORM_ID',
+    videos:  'PLACEHOLDER_VIDEOS_FORM_ID',
   };
 
   const surveyId  = surveyIds[type];
@@ -590,13 +608,78 @@ function closeOverlay(type) {
   document.body.style.overflow = '';
 }
 
-// ── Listen for GHL form submission via postMessage ────────────────────────────
+// Listen for GHL form submission via postMessage
+// Catches all known GHL/LeadConnector message shapes + shows debug panel on screen
 window.addEventListener('message', function(event) {
-  // GHL typically fires a message when a form is submitted
-  if (event.data && (event.data.type === 'form-submitted' || event.data === 'form-submitted')) {
-    // Try to detect which overlay is open
+  const data = event.data;
+  if (!data) return;
+
+  // Build string version for matching
+  let dataStr = '';
+  try { dataStr = typeof data === 'string' ? data : JSON.stringify(data); } catch(e) {}
+
+  // Skip noisy browser/extension messages
+  const noisyPrefixes = ['react-devtools', 'webpack', 'vite', 'setImmediate', '__ghl_height'];
+  if (noisyPrefixes.some(p => dataStr.includes(p))) return;
+
+  // DEBUG PANEL: shows every postMessage on screen so you can see what GHL sends
+  // Remove the debug panel div from HTML once confirmed working
+  const debugBox = document.getElementById('ghl-debug-panel');
+  if (debugBox) {
+    const entry = document.createElement('div');
+    entry.style.cssText = 'border-bottom:1px solid #eee;padding:4px 0;word-break:break-all;font-size:11px;font-family:monospace;';
+    entry.textContent = new Date().toLocaleTimeString() + ' -> ' + dataStr.slice(0, 400);
+    debugBox.prepend(entry);
+    debugBox.style.display = 'block';
+  }
+
+  const isSubmission =
+    (typeof data === 'object' && (
+      data.type === 'form-submitted'         ||
+      data.type === 'survey-submitted'       ||
+      data.type === 'FORM_SUBMITTED'         ||
+      data.type === 'SURVEY_SUBMITTED'       ||
+      data.type === 'form_submitted'         ||
+      data.type === 'survey_submitted'       ||
+      data.event === 'form-submitted'        ||
+      data.event === 'survey-submitted'      ||
+      data.event === 'FORM_SUBMITTED'        ||
+      data.event === 'SURVEY_SUBMITTED'      ||
+      data.event === 'form_submitted'        ||
+      data.event === 'survey_submitted'      ||
+      data.action === 'form-submitted'       ||
+      data.action === 'form_submitted'       ||
+      data.message === 'form-submitted'      ||
+      data.message === 'form_submitted'      ||
+      (data.data && (
+        data.data.type === 'form-submitted'  ||
+        data.data.type === 'survey-submitted'||
+        data.data.type === 'form_submitted'  ||
+        data.data.event === 'form-submitted' ||
+        data.data.event === 'form_submitted'
+      ))
+    )) ||
+    (typeof data === 'string' && (
+      data === 'form-submitted'              ||
+      data === 'survey-submitted'            ||
+      data === 'form_submitted'              ||
+      data.includes('form-submitted')        ||
+      data.includes('survey-submitted')      ||
+      data.includes('form_submitted')        ||
+      data.includes('survey_submitted')
+    )) ||
+    (dataStr.includes('"form-submitted"')    ||
+     dataStr.includes('"survey-submitted"')  ||
+     dataStr.includes('"FORM_SUBMITTED"')    ||
+     dataStr.includes('"SURVEY_SUBMITTED"')  ||
+     dataStr.includes('"form_submitted"')    ||
+     dataStr.includes('"survey_submitted"')  ||
+     dataStr.includes('submissionId')        ||
+     dataStr.includes('formSubmitted'));
+
+  if (isSubmission) {
     ['license', 'drivers', 'videos'].forEach(type => {
-      const overlay = document.getElementById(`overlay-${type}`);
+      const overlay = document.getElementById('overlay-' + type);
       if (overlay && overlay.style.display === 'block') {
         markComplete(type);
         closeOverlay(type);
@@ -691,5 +774,15 @@ function goBackToForm() {
   document.getElementById('checklist-submit-area').style.display = 'none';
 }
 </script>
+
+<!-- GHL DEBUG PANEL - remove once postMessage is confirmed working -->
+<div id="ghl-debug-panel" style="display:none;position:fixed;bottom:0;left:0;right:0;z-index:99999;background:#1e1e1e;color:#00ff88;padding:10px 14px;max-height:220px;overflow-y:auto;border-top:3px solid #00ff88;font-size:11px;font-family:monospace;">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+    <strong style="font-size:13px;">&#128295; GHL postMessage Debug Panel</strong>
+    <button onclick="document.getElementById('ghl-debug-panel').style.display='none'" style="background:#ff4444;color:#fff;border:none;border-radius:4px;padding:2px 8px;cursor:pointer;font-size:12px;">Close</button>
+  </div>
+  <div style="color:#aaa;font-size:10px;margin-bottom:4px;">Messages will appear here when GHL iframe fires events. Submit the form to see what it sends.</div>
+</div>
+
 </body>
 </html>
