@@ -438,7 +438,7 @@ let currentLastName    = '';
 let currentEmail       = '';
 let currentOpportunityId = '';
 
-const completed = { license: false, drivers: false, videos: false };
+const completed = { maindriver: false, additionaldrivers: false, onboardingvideos: false };
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 function formatDate(dateStr) {
@@ -569,9 +569,9 @@ function openFormOverlay(type) {
 
   // Survey IDs — replace these with real IDs when ready
   const surveyIds = {
-    license: 'Z72YgsQdLM9n2lfu6DTD',
-    drivers: 'PLACEHOLDER_DRIVERS_FORM_ID',
-    videos:  'PLACEHOLDER_VIDEOS_FORM_ID',
+    maindriver: 'rs0MCHeDrS3n4Ouy9cQI',
+    additionaldrivers: '53xc9WpBaSAQY3heDE6t',
+    onboardingvideos:  'msvAaM2jMlXUWySQwEOH',
   };
 
   const surveyId  = surveyIds[type];
@@ -626,7 +626,7 @@ window.addEventListener('message', function(event) {
     (typeof dataStr === 'string' && dataStr.includes('set-sticky-contacts'));
 
   if (isSubmission) {
-    ['license', 'drivers', 'videos'].forEach(type => {
+    ['maindriver', 'additionaldrivers', 'onboardingvideos'].forEach(type => {
       const overlay = document.getElementById('overlay-' + type);
       if (overlay && overlay.style.display === 'block') {
         markComplete(type);
@@ -646,22 +646,22 @@ function markComplete(type) {
 }
 
 function checkAllDone() {
-  const mandatoryDone = completed.license && completed.videos;
+  const mandatoryDone = completed.maindriver && completed.videos;
   document.getElementById('checklist-submit-area').style.display = mandatoryDone ? 'block' : 'none';
 }
 
 // ── Success modal ─────────────────────────────────────────────────────────────
 const successMessages = {
-  license: {
+  maindriver: {
     title: 'License Details Submitted!',
     body:  "We've received your driver's license information. You can now close this window."
   },
-  drivers: {
+  additionaldrivers: {
     title: 'Additional Drivers Added!',
     body:  "Additional driver information has been submitted successfully."
   },
-  videos: {
-    title: 'Videos Confirmed!',
+  onboardingvideos: {
+    title: 'Onboarding Confirmed!',
     body:  "Thanks for watching the onboarding and safety videos. You're all set!"
   }
 };
