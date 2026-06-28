@@ -522,7 +522,7 @@ function openFormOverlay(type) {
   const cacheBuster = Date.now();
   const surveyUrl   = 'https://api.leadconnectorhq.com/widget/survey/' + surveyId
     + '?email='   + encodeURIComponent(currentEmail)
-    + '&booking=' + encodeURIComponent(currentBookingNum)
+    + '&booking_number=' + encodeURIComponent(currentBookingNum)
     + '&t='       + cacheBuster;
 
   const container = document.getElementById('survey-iframe-' + type);
