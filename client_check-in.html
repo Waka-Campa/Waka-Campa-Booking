@@ -165,6 +165,79 @@
   .success-box h3 { font-size: 20px; margin-bottom: 10px; }
   .success-box p { color: #555; font-size: 15px; line-height: 1.6; margin-bottom: 24px; }
 
+  /* ── Bedding Selector ── */
+  .bedding-section {
+    background: #f8f8f8;
+    border: 2px solid #ddd;
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 20px;
+  }
+  .bedding-section h4 {
+    font-size: 16px;
+    font-weight: bold;
+    margin-bottom: 4px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .bedding-section .bedding-subtitle {
+    font-size: 13px;
+    color: #666;
+    margin-bottom: 16px;
+  }
+  .bedding-current {
+    font-size: 14px;
+    color: #444;
+    margin-bottom: 12px;
+  }
+  .bedding-current span {
+    font-weight: bold;
+    color: #000;
+  }
+  .bedding-buttons {
+    display: flex;
+    gap: 10px;
+  }
+  .bedding-btn {
+    flex: 1;
+    padding: 14px 8px;
+    border: 2px solid #ddd;
+    border-radius: 8px;
+    background: #fff;
+    font-size: 20px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all .15s;
+    font-family: inherit;
+    text-align: center;
+    line-height: 1.2;
+  }
+  .bedding-btn:hover { border-color: #888; background: #f4f4f4; }
+  .bedding-btn.selected {
+    border-color: #000;
+    background: radial-gradient(circle 200px at 50% 70%, #444, #000);
+    color: #fff;
+  }
+  .bedding-btn .bedding-label {
+    display: block;
+    font-size: 11px;
+    font-weight: normal;
+    margin-top: 4px;
+    opacity: 0.75;
+  }
+  .bedding-changed-badge {
+    display: none;
+    font-size: 11px;
+    font-weight: bold;
+    color: #0369a1;
+    background: #e0f2fe;
+    border-radius: 4px;
+    padding: 2px 8px;
+    margin-left: 8px;
+    vertical-align: middle;
+  }
+
   @media (max-width: 480px) { .action-row { grid-template-columns: 1fr; } }
 </style>
 </head>
@@ -233,7 +306,31 @@
       <strong>Items marked Mandatory</strong> must be finished to proceed.
     </p>
 
-    <!-- Item 1: Driver's License — overlay id & item id both use key "license" -->
+    <!-- ── Bedding Selector ── -->
+    <div class="bedding-section" id="bedding-section">
+      <h4>
+        🛏️ Number of Beddings
+        <span class="bedding-changed-badge" id="bedding-changed-badge">Modified</span>
+      </h4>
+      <p class="bedding-subtitle">Your current bedding allocation is shown below. You may adjust it if needed.</p>
+      <p class="bedding-current">Current booking: <span id="bedding-current-value">—</span> set(s)</p>
+      <div class="bedding-buttons">
+        <button class="bedding-btn" id="bedding-btn-1" onclick="selectBedding(1)">
+          1
+          <span class="bedding-label">set</span>
+        </button>
+        <button class="bedding-btn" id="bedding-btn-2" onclick="selectBedding(2)">
+          2
+          <span class="bedding-label">sets</span>
+        </button>
+        <button class="bedding-btn" id="bedding-btn-3" onclick="selectBedding(3)">
+          3
+          <span class="bedding-label">sets</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Item 1: Driver's License -->
     <div class="checklist-item" id="item-license" onclick="openFormOverlay('license')">
       <div class="check-icon" id="check-license">✓</div>
       <div class="checklist-body">
@@ -243,7 +340,7 @@
       <div class="checklist-arrow">›</div>
     </div>
 
-    <!-- Item 2: Onboarding Videos — key "videos" -->
+    <!-- Item 2: Onboarding Videos -->
     <div class="checklist-item" id="item-videos" onclick="openFormOverlay('videos')">
       <div class="check-icon" id="check-videos">✓</div>
       <div class="checklist-body">
@@ -253,7 +350,7 @@
       <div class="checklist-arrow">›</div>
     </div>
 
-   <!-- Item 3: Additional Drivers — key "drivers" -->
+    <!-- Item 3: Additional Drivers -->
     <div class="checklist-item" id="item-drivers" onclick="openFormOverlay('drivers')">
       <div class="check-icon" id="check-drivers">✓</div>
       <div class="checklist-body">
@@ -277,7 +374,6 @@
 
 <!-- OVERLAYS -->
 
-<!-- overlay id="overlay-license" matches key "license" -->
 <div class="overlay" id="overlay-license">
   <div class="overlay-inner">
     <button class="overlay-close" onclick="closeOverlay('license')">×</button>
@@ -290,7 +386,6 @@
   </div>
 </div>
 
-<!-- overlay id="overlay-drivers" matches key "drivers" -->
 <div class="overlay" id="overlay-drivers">
   <div class="overlay-inner">
     <button class="overlay-close" onclick="closeOverlay('drivers')">×</button>
@@ -303,7 +398,6 @@
   </div>
 </div>
 
-<!-- overlay id="overlay-videos" matches key "videos" -->
 <div class="overlay" id="overlay-videos">
   <div class="overlay-inner">
     <button class="overlay-close" onclick="closeOverlay('videos')">×</button>
@@ -334,33 +428,25 @@ let currentBookingNum    = '';
 let currentLastName      = '';
 let currentEmail         = '';
 let currentOpportunityId = '';
+let originalBeddings     = null;   // value from the API
+let selectedBeddings     = null;   // what the customer chose
 
-// All three keys must match: surveyIds keys, item IDs (item-KEY), overlay IDs (overlay-KEY),
-// iframe container IDs (survey-iframe-KEY), and the completed object keys.
-const ITEMS = ['license', 'drivers', 'videos'];
-
-// Survey IDs — key matches ITEMS above
-const surveyIds = {
-  license: 'rs0MCHeDrS3n4Ouy9cQI',   // Add Driver's License
-  drivers: '53xc9WpBaSAQY3heDE6t',   // Additional Drivers
-  videos:  'msvAaM2jMlXUWySQwEOH',   // Onboarding Videos
-};
-
-// Mandatory items — must be done before Submit Check-In appears
+const ITEMS     = ['license', 'drivers', 'videos'];
 const MANDATORY = ['license', 'videos'];
 
-// In-memory completion state (restored from localStorage on login)
+const surveyIds = {
+  license: 'rs0MCHeDrS3n4Ouy9cQI',
+  drivers: '53xc9WpBaSAQY3heDE6t',
+  videos:  'msvAaM2jMlXUWySQwEOH',
+};
+
 let completed = { license: false, drivers: false, videos: false };
 
 // ── localStorage helpers ──────────────────────────────────────────────────────
-function storageKey(bookingNum) {
-  return 'checkin_completed_' + bookingNum;
-}
+function storageKey(bookingNum) { return 'checkin_completed_' + bookingNum; }
 
 function saveCompleted() {
-  try {
-    localStorage.setItem(storageKey(currentBookingNum), JSON.stringify(completed));
-  } catch(e) {}
+  try { localStorage.setItem(storageKey(currentBookingNum), JSON.stringify(completed)); } catch(e) {}
 }
 
 function loadCompleted(bookingNum) {
@@ -371,6 +457,32 @@ function loadCompleted(bookingNum) {
   return { license: false, drivers: false, videos: false };
 }
 
+// ── Bedding selector ──────────────────────────────────────────────────────────
+function initBedding(valueFromAPI) {
+  // Parse to int; default to 1 if missing/invalid
+  const parsed = parseInt(valueFromAPI);
+  originalBeddings = (!isNaN(parsed) && parsed >= 1 && parsed <= 3) ? parsed : 1;
+  selectedBeddings = originalBeddings;
+
+  document.getElementById('bedding-current-value').textContent = originalBeddings;
+  highlightBeddingBtn(originalBeddings);
+  document.getElementById('bedding-changed-badge').style.display = 'none';
+}
+
+function selectBedding(n) {
+  selectedBeddings = n;
+  highlightBeddingBtn(n);
+  const changed = n !== originalBeddings;
+  document.getElementById('bedding-changed-badge').style.display = changed ? 'inline' : 'none';
+}
+
+function highlightBeddingBtn(n) {
+  [1, 2, 3].forEach(i => {
+    const btn = document.getElementById('bedding-btn-' + i);
+    btn.classList.toggle('selected', i === n);
+  });
+}
+
 // ── Helpers ───────────────────────────────────────────────────────────────────
 function formatDate(dateStr) {
   if (!dateStr || dateStr === 'N/A') return 'N/A';
@@ -378,7 +490,7 @@ function formatDate(dateStr) {
   if (isNaN(d.getTime())) return dateStr;
   const months = ['January','February','March','April','May','June',
                   'July','August','September','October','November','December'];
-  return `${months[d.getMonth()]} ${d.getDate()}, ${d.getFullYear()}`;
+  return months[d.getMonth()] + ' ' + d.getDate() + ', ' + d.getFullYear();
 }
 
 function showError(msg) {
@@ -395,10 +507,9 @@ function clearError() {
 
 function row(label, value) {
   if (!value || value === 'N/A') return '';
-  return `<div><strong>${label}:</strong> ${value}</div>`;
+  return '<div><strong>' + label + ':</strong> ' + value + '</div>';
 }
 
-// ── Apply completed state to the UI ──────────────────────────────────────────
 function applyCompletedUI() {
   ITEMS.forEach(type => {
     const item = document.getElementById('item-' + type);
@@ -407,17 +518,17 @@ function applyCompletedUI() {
       item.onclick = null;
     } else {
       item.classList.remove('completed');
-      item.onclick = () => openFormOverlay(type);
+      item.onclick = function() { openFormOverlay(type); };
     }
   });
   checkAllDone();
 }
 
 // ── Keyboard shortcuts ────────────────────────────────────────────────────────
-document.getElementById('booking-input').addEventListener('keydown', e => {
+document.getElementById('booking-input').addEventListener('keydown', function(e) {
   if (e.key === 'Enter') document.getElementById('verify-btn').click();
 });
-document.getElementById('lastname-input').addEventListener('keydown', e => {
+document.getElementById('lastname-input').addEventListener('keydown', function(e) {
   if (e.key === 'Enter') document.getElementById('verify-btn').click();
 });
 document.getElementById('booking-input').addEventListener('input', function() {
@@ -462,10 +573,10 @@ document.getElementById('verify-btn').onclick = async function(e) {
       currentEmail         = d.hirerEmail || d.email || '';
       currentOpportunityId = d.opportunityId || '';
 
-      // Restore saved progress for this booking
       completed = loadCompleted(currentBookingNum);
 
       document.getElementById('booking-number-display').textContent = 'Booking # ' + (d.bookingNum || 'N/A');
+
       document.getElementById('booking-info').innerHTML =
         row('Pickup Date',      formatDate(d.pickupDate))  +
         row('Pickup Time',      d.pickupTime)              +
@@ -475,19 +586,22 @@ document.getElementById('verify-btn').onclick = async function(e) {
         row('Dropoff Location', d.dropoffLocation);
 
       document.getElementById('contact-info').innerHTML =
-        row('Full Name', d.hirerFullName)           +
-        row('Email',     d.hirerEmail || d.email)   +
-        row('Phone',     d.hirerPhone)              +
+        row('Full Name', d.hirerFullName)         +
+        row('Email',     d.hirerEmail || d.email) +
+        row('Phone',     d.hirerPhone)            +
         (d.additionalPhone ? row('Additional Phone', d.additionalPhone) : '');
 
       const hasVehicle = d.vehicleCategory || d.vehicleFleetNumber;
       if (hasVehicle) {
         document.getElementById('vehicle-info').innerHTML =
-          row('Vehicle Type',          d.vehicleCategory)          +
-          row('Fleet Number',          d.vehicleFleetNumber)       +
-          row('Registration Number',   d.vehicleRegistrationNumber);
+          row('Vehicle Type',        d.vehicleCategory)          +
+          row('Fleet Number',        d.vehicleFleetNumber)       +
+          row('Registration Number', d.vehicleRegistrationNumber);
         document.getElementById('vehicle-section').style.display = 'block';
       }
+
+      // Initialise bedding selector with value from API
+      initBedding(d.numberofbeddings);
 
       document.getElementById('booking-details').style.display = 'block';
       document.getElementById('booking-actions').style.display = 'block';
@@ -508,32 +622,29 @@ document.getElementById('verify-btn').onclick = async function(e) {
 document.getElementById('confirm-btn').onclick = function() {
   document.getElementById('booking-actions').style.display   = 'none';
   document.getElementById('checklist-section').style.display = 'block';
-  applyCompletedUI(); // restore green ticks if returning customer
+  applyCompletedUI();
 };
 
 // ── Open form overlay ─────────────────────────────────────────────────────────
 function openFormOverlay(type) {
   const surveyId = surveyIds[type];
-  if (!surveyId) {
-    console.error('No survey ID for type:', type);
-    return;
-  }
+  if (!surveyId) { console.error('No survey ID for type:', type); return; }
 
   const cacheBuster = Date.now();
   const surveyUrl   = 'https://api.leadconnectorhq.com/widget/survey/' + surveyId
-    + '?email='   + encodeURIComponent(currentEmail)
+    + '?email='          + encodeURIComponent(currentEmail)
     + '&booking_number=' + encodeURIComponent(currentBookingNum)
-    + '&t='       + cacheBuster;
+    + '&t='              + cacheBuster;
 
   const container = document.getElementById('survey-iframe-' + type);
   container.innerHTML = '';
 
-  const iframe     = document.createElement('iframe');
-  iframe.src       = surveyUrl;
+  const iframe         = document.createElement('iframe');
+  iframe.src           = surveyUrl;
   iframe.style.cssText = 'border:none;width:100%;height:600px;display:block;';
-  iframe.scrolling = 'no';
-  iframe.id        = surveyId;
-  iframe.title     = 'survey';
+  iframe.scrolling     = 'no';
+  iframe.id            = surveyId;
+  iframe.title         = 'survey';
   container.appendChild(iframe);
 
   if (!document.querySelector('script[src*="form_embed.js"]')) {
@@ -552,9 +663,7 @@ function closeOverlay(type) {
   document.body.style.overflow = '';
 }
 
-// ── GHL postMessage listener ──────────────────────────────────────────────────
-// GHL does NOT fire "form-submitted". After a successful submission it fires
-// "set-sticky-contacts" as a JSON array: ["set-sticky-contacts", "_ud", "{...}"]
+// ── GHL postMessage — "set-sticky-contacts" fires after submission ────────────
 window.addEventListener('message', function(event) {
   const data = event.data;
   if (!data) return;
@@ -568,8 +677,7 @@ window.addEventListener('message', function(event) {
 
   if (!isSubmission) return;
 
-  // Find whichever overlay is currently open and mark it done
-  ITEMS.forEach(type => {
+  ITEMS.forEach(function(type) {
     const overlay = document.getElementById('overlay-' + type);
     if (overlay && overlay.style.display === 'block') {
       markComplete(type);
@@ -582,29 +690,20 @@ window.addEventListener('message', function(event) {
 // ── Mark checklist item complete ──────────────────────────────────────────────
 function markComplete(type) {
   completed[type] = true;
-  saveCompleted();          // persist to localStorage
+  saveCompleted();
   applyCompletedUI();
 }
 
 function checkAllDone() {
-  const allMandatoryDone = MANDATORY.every(t => completed[t]);
+  const allMandatoryDone = MANDATORY.every(function(t) { return completed[t]; });
   document.getElementById('checklist-submit-area').style.display = allMandatoryDone ? 'block' : 'none';
 }
 
 // ── Success modal ─────────────────────────────────────────────────────────────
 const successMessages = {
-  license: {
-    title: 'License Details Submitted!',
-    body:  "We've received your driver's license information."
-  },
-  drivers: {
-    title: 'Additional Drivers Added!',
-    body:  'Additional driver information has been submitted successfully.'
-  },
-  videos: {
-    title: 'Videos Confirmed!',
-    body:  "Thanks for watching the onboarding and safety videos. You're all set!"
-  }
+  license: { title: 'License Details Submitted!',   body: "We've received your driver's license information." },
+  drivers: { title: 'Additional Drivers Added!',     body: 'Additional driver information has been submitted successfully.' },
+  videos:  { title: 'Videos Confirmed!',             body: "Thanks for watching the onboarding and safety videos. You're all set!" }
 };
 
 function showSuccessModal(type) {
@@ -620,18 +719,23 @@ function closeSuccessModal() {
 
 // ── Final check-in submission ─────────────────────────────────────────────────
 function submitCheckin() {
+  const beddingChanged  = selectedBeddings !== originalBeddings;
+
   fetch('https://n8n.wakacampa.com/webhook/083419b8-116b-4354-b289-8d9f0fdc2eef', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
-      type: 'check_in_completed',
-      booking: currentBookingNum,
-      lastName: currentLastName,
-      email: currentEmail,
-      opportunityId: currentOpportunityId,
-      completedItems: completed
+      type:                  'check_in_completed',
+      booking:               currentBookingNum,
+      lastName:              currentLastName,
+      email:                 currentEmail,
+      opportunityId:         currentOpportunityId,
+      completedItems:        completed,
+      numberOfBeddings:      selectedBeddings,
+      originalBeddings:      originalBeddings,
+      beddingChanged:        beddingChanged
     })
-  }).catch(err => console.error('Check-in submit error:', err));
+  }).catch(function(err) { console.error('Check-in submit error:', err); });
 
   document.getElementById('success-title').textContent = '✅ Check-In Complete!';
   document.getElementById('success-body').textContent  = 'Your check-in is complete. Our team has been notified. See you on the road! 🚐';
@@ -640,12 +744,11 @@ function submitCheckin() {
 
 // ── Log out / reset ───────────────────────────────────────────────────────────
 function goBackToForm() {
-  document.getElementById('form-section').style.display      = 'block';
-  document.getElementById('loading').style.display           = 'none';
-  document.getElementById('booking-details').style.display   = 'none';
-  document.getElementById('booking-actions').style.display   = 'none';
-  document.getElementById('checklist-section').style.display = 'none';
-  document.getElementById('vehicle-section').style.display   = 'none';
+  ['form-section','booking-details','booking-actions','checklist-section'].forEach(function(id) {
+    document.getElementById(id).style.display = id === 'form-section' ? 'block' : 'none';
+  });
+  document.getElementById('loading').style.display         = 'none';
+  document.getElementById('vehicle-section').style.display = 'none';
   document.getElementById('booking-input').value  = '';
   document.getElementById('lastname-input').value = '';
   clearError();
@@ -654,15 +757,20 @@ function goBackToForm() {
   currentLastName      = '';
   currentEmail         = '';
   currentOpportunityId = '';
+  originalBeddings     = null;
+  selectedBeddings     = null;
   completed = { license: false, drivers: false, videos: false };
 
-  // Reset checklist UI
-  ITEMS.forEach(type => {
+  ITEMS.forEach(function(type) {
     const item = document.getElementById('item-' + type);
     item.classList.remove('completed');
-    item.onclick = () => openFormOverlay(type);
+    item.onclick = function() { openFormOverlay(type); };
   });
   document.getElementById('checklist-submit-area').style.display = 'none';
+  document.getElementById('bedding-changed-badge').style.display = 'none';
+  [1,2,3].forEach(function(i) {
+    document.getElementById('bedding-btn-' + i).classList.remove('selected');
+  });
 }
 </script>
 
