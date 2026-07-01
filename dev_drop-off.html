@@ -83,7 +83,7 @@ document.getElementById('verify-btn').onclick = async function(e) {
   document.getElementById('loading').style.display = 'block';
 
   try {
-    const response = await fetch('https://n8n.wakacampa.com/webhook/e4ffaa0c-c076-4d23-8b69-9ac0f8d6a6bb', {
+    const response = await fetch('https://n8n.wakacampa.com/webhook/c1560177-b654-42db-9339-b69bba28f098', {
       method: 'POST',
       headers: {'Content-Type': 'application/json'},
       body: JSON.stringify({bookingNum: currentBookingNum, lastName: currentLastName})
