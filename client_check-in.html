@@ -8,7 +8,6 @@
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
   body {
     font-family: 'DM Sans', Arial, sans-serif;
     background: #f2f2f2;
@@ -18,7 +17,6 @@
     justify-content: center;
     padding: 30px 16px 60px;
   }
-
   .card {
     background: #fff;
     max-width: 600px;
@@ -28,12 +26,10 @@
     padding: 30px;
     color: #000;
   }
-
   .card-header { text-align: center; margin-bottom: 24px; }
   .card-header h2 { font-size: 18px; margin-bottom: 16px; }
   .card-header img { width: 118px; height: 118px; display: inline-block; }
   .divider { border: none; border-top: 1px solid #ddd; margin: 20px 0; }
-
   label { display: block; margin-bottom: 5px; color: #000; }
   label.bold { font-weight: bold; text-align: center; margin-bottom: 14px; }
   input[type="text"] {
@@ -48,7 +44,6 @@
   }
   input[type="text"]:focus { outline: none; border-color: #888; }
   .field { margin-bottom: 20px; }
-
   .btn-primary {
     width: 100%;
     padding: 15px;
@@ -63,7 +58,6 @@
     transition: opacity .15s;
   }
   .btn-primary:hover { opacity: .85; }
-
   .btn-secondary {
     width: 100%;
     padding: 14px;
@@ -75,20 +69,17 @@
     cursor: pointer;
     font-family: inherit;
   }
-
   .loading { display: none; padding: 20px; text-align: center; font-size: 16px; }
-
   #booking-details { display: none; }
   .section-title { font-size: 18px; margin-bottom: 10px; border-bottom: 1px solid #eee; padding-bottom: 6px; }
   .detail-grid { display: grid; gap: 8px; font-size: 16px; margin-bottom: 20px; }
   .booking-number-badge { text-align: center; font-size: 20px; font-weight: bold; margin-bottom: 20px; }
-
   #booking-actions { display: none; }
   .action-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 20px; }
-
   #checklist-section { display: none; }
   .checklist-intro { text-align: center; margin-bottom: 20px; font-size: 15px; color: #444; line-height: 1.6; }
 
+  /* Checklist items */
   .checklist-item {
     display: flex;
     align-items: center;
@@ -103,7 +94,17 @@
   }
   .checklist-item:hover { border-color: #888; background: #f4f4f4; }
   .checklist-item.completed { border-color: #22c55e; background: #f0fdf4; cursor: default; }
-
+  .checklist-item.locked {
+    opacity: 0.5;
+    cursor: not-allowed;
+    background: #f5f5f5;
+  }
+  .checklist-item.locked:hover { border-color: #ddd; background: #f5f5f5; }
+  .checklist-item.pending-verification {
+    border-color: #f59e0b;
+    background: #fffbeb;
+    cursor: default;
+  }
   .check-icon {
     width: 32px;
     height: 32px;
@@ -118,25 +119,20 @@
     transition: all .2s;
   }
   .checklist-item.completed .check-icon { background: #22c55e; border-color: #22c55e; color: #fff; }
-
+  .checklist-item.pending-verification .check-icon { background: #f59e0b; border-color: #f59e0b; color: #fff; font-size: 13px; }
   .checklist-body { flex: 1; }
   .checklist-body strong { display: block; font-size: 16px; margin-bottom: 2px; }
   .checklist-body span { font-size: 13px; color: #666; }
-
-  .mandatory-tag {
-    font-size: 11px; font-weight: bold; color: #b45309;
-    background: #fef3c7; border-radius: 4px; padding: 2px 6px; margin-left: 6px; vertical-align: middle;
-  }
-  .optional-tag {
-    font-size: 11px; font-weight: bold; color: #555;
-    background: #f0f0f0; border-radius: 4px; padding: 2px 6px; margin-left: 6px; vertical-align: middle;
-  }
-
+  .mandatory-tag { font-size: 11px; font-weight: bold; color: #b45309; background: #fef3c7; border-radius: 4px; padding: 2px 6px; margin-left: 6px; vertical-align: middle; }
+  .optional-tag { font-size: 11px; font-weight: bold; color: #555; background: #f0f0f0; border-radius: 4px; padding: 2px 6px; margin-left: 6px; vertical-align: middle; }
+  .locked-tag { font-size: 11px; font-weight: bold; color: #6b7280; background: #e5e7eb; border-radius: 4px; padding: 2px 6px; margin-left: 6px; vertical-align: middle; }
   .checklist-arrow { color: #bbb; font-size: 20px; flex-shrink: 0; }
   .checklist-item.completed .checklist-arrow { color: #22c55e; }
+  .checklist-item.locked .checklist-arrow { color: #d1d5db; }
 
   #error-msg { display: none; color: #ef4444; text-align: center; padding: 12px 0; font-size: 15px; }
 
+  /* Overlays */
   .overlay {
     display: none; position: fixed; z-index: 9999; inset: 0;
     background: rgba(0,0,0,0.65); overflow-y: auto;
@@ -152,6 +148,57 @@
   }
   .overlay-title { text-align: center; font-size: 18px; font-weight: bold; margin-bottom: 16px; }
 
+  /* Card on file overlay options */
+  .card-option {
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+    padding: 18px;
+    border: 2px solid #ddd;
+    border-radius: 10px;
+    margin-bottom: 12px;
+    cursor: pointer;
+    transition: border-color .2s, background .2s;
+    background: #fafafa;
+  }
+  .card-option:hover { border-color: #888; background: #f4f4f4; }
+  .card-option-icon { font-size: 28px; flex-shrink: 0; }
+  .card-option-body strong { display: block; font-size: 16px; margin-bottom: 4px; }
+  .card-option-body p { font-size: 13px; color: #666; line-height: 1.5; margin: 0; }
+  .card-disclaimer {
+    background: #fff8e1;
+    border: 1px solid #f59e0b;
+    border-radius: 8px;
+    padding: 14px;
+    font-size: 13px;
+    color: #78350f;
+    margin-bottom: 20px;
+    line-height: 1.6;
+  }
+
+  /* Agreement overlay */
+  .agreement-disclaimer {
+    background: #f0f9ff;
+    border: 1px solid #0ea5e9;
+    border-radius: 8px;
+    padding: 14px;
+    font-size: 13px;
+    color: #0c4a6e;
+    margin-bottom: 20px;
+    line-height: 1.6;
+  }
+  .agreement-status-box {
+    background: #f8f8f8;
+    border: 2px solid #ddd;
+    border-radius: 10px;
+    padding: 20px;
+    text-align: center;
+    margin-bottom: 16px;
+  }
+  .agreement-status-box .status-icon { font-size: 36px; margin-bottom: 8px; }
+  .agreement-status-box p { font-size: 14px; color: #555; }
+
+  /* Success modal */
   #success-modal {
     display: none; position: fixed; z-index: 10000; inset: 0;
     background: rgba(0,0,0,0.65); align-items: center; justify-content: center;
@@ -165,7 +212,7 @@
   .success-box h3 { font-size: 20px; margin-bottom: 10px; }
   .success-box p { color: #555; font-size: 15px; line-height: 1.6; margin-bottom: 24px; }
 
-  /* ── Bedding Selector ── */
+  /* Bedding selector */
   .bedding-section {
     background: #f8f8f8;
     border: 2px solid #ddd;
@@ -173,45 +220,15 @@
     padding: 20px;
     margin-bottom: 20px;
   }
-  .bedding-section h4 {
-    font-size: 16px;
-    font-weight: bold;
-    margin-bottom: 4px;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-  }
-  .bedding-section .bedding-subtitle {
-    font-size: 13px;
-    color: #666;
-    margin-bottom: 16px;
-  }
-  .bedding-current {
-    font-size: 14px;
-    color: #444;
-    margin-bottom: 12px;
-  }
-  .bedding-current span {
-    font-weight: bold;
-    color: #000;
-  }
-  .bedding-buttons {
-    display: flex;
-    gap: 10px;
-  }
+  .bedding-section h4 { font-size: 16px; font-weight: bold; margin-bottom: 4px; display: flex; align-items: center; gap: 8px; }
+  .bedding-subtitle { font-size: 13px; color: #666; margin-bottom: 16px; }
+  .bedding-current { font-size: 14px; color: #444; margin-bottom: 12px; }
+  .bedding-current span { font-weight: bold; color: #000; }
+  .bedding-buttons { display: flex; gap: 10px; }
   .bedding-btn {
-    flex: 1;
-    padding: 14px 8px;
-    border: 2px solid #ddd;
-    border-radius: 8px;
-    background: #fff;
-    font-size: 20px;
-    font-weight: bold;
-    cursor: pointer;
-    transition: all .15s;
-    font-family: inherit;
-    text-align: center;
-    line-height: 1.2;
+    flex: 1; padding: 14px 8px; border: 2px solid #ddd; border-radius: 8px;
+    background: #fff; font-size: 20px; font-weight: bold; cursor: pointer;
+    transition: all .15s; font-family: inherit; text-align: center; line-height: 1.2;
   }
   .bedding-btn:hover { border-color: #888; background: #f4f4f4; }
   .bedding-btn.selected {
@@ -219,24 +236,33 @@
     background: radial-gradient(circle 200px at 50% 70%, #444, #000);
     color: #fff;
   }
-  .bedding-btn .bedding-label {
-    display: block;
-    font-size: 11px;
-    font-weight: normal;
-    margin-top: 4px;
-    opacity: 0.75;
-  }
+  .bedding-btn .bedding-label { display: block; font-size: 11px; font-weight: normal; margin-top: 4px; opacity: 0.75; }
   .bedding-changed-badge {
-    display: none;
-    font-size: 11px;
-    font-weight: bold;
-    color: #0369a1;
-    background: #e0f2fe;
-    border-radius: 4px;
-    padding: 2px 8px;
-    margin-left: 8px;
-    vertical-align: middle;
+    display: none; font-size: 11px; font-weight: bold; color: #0369a1;
+    background: #e0f2fe; border-radius: 4px; padding: 2px 8px; margin-left: 8px; vertical-align: middle;
   }
+
+  /* Check status button */
+  .check-status-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 14px;
+    padding: 10px 18px;
+    background: #f3f4f6;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: bold;
+    color: #374151;
+    cursor: pointer;
+    font-family: inherit;
+    transition: background .15s;
+    width: 100%;
+    justify-content: center;
+  }
+  .check-status-btn:hover { background: #e5e7eb; }
+  .check-status-btn:disabled { opacity: 0.5; cursor: not-allowed; }
 
   @media (max-width: 480px) { .action-row { grid-template-columns: 1fr; } }
 </style>
@@ -306,7 +332,7 @@
       <strong>Items marked Mandatory</strong> must be finished to proceed.
     </p>
 
-    <!-- ── Bedding Selector ── -->
+    <!-- Bedding Selector -->
     <div class="bedding-section" id="bedding-section">
       <h4>
         🛏️ Number of Beddings
@@ -315,18 +341,9 @@
       <p class="bedding-subtitle">Your current bedding allocation is shown below. You may adjust it if needed.</p>
       <p class="bedding-current">Current booking: <span id="bedding-current-value">—</span> set(s)</p>
       <div class="bedding-buttons">
-        <button class="bedding-btn" id="bedding-btn-1" onclick="selectBedding(1)">
-          1
-          <span class="bedding-label">set</span>
-        </button>
-        <button class="bedding-btn" id="bedding-btn-2" onclick="selectBedding(2)">
-          2
-          <span class="bedding-label">sets</span>
-        </button>
-        <button class="bedding-btn" id="bedding-btn-3" onclick="selectBedding(3)">
-          3
-          <span class="bedding-label">sets</span>
-        </button>
+        <button class="bedding-btn" id="bedding-btn-1" onclick="selectBedding(1)">1<span class="bedding-label">set</span></button>
+        <button class="bedding-btn" id="bedding-btn-2" onclick="selectBedding(2)">2<span class="bedding-label">sets</span></button>
+        <button class="bedding-btn" id="bedding-btn-3" onclick="selectBedding(3)">3<span class="bedding-label">sets</span></button>
       </div>
     </div>
 
@@ -350,12 +367,32 @@
       <div class="checklist-arrow">›</div>
     </div>
 
-    <!-- Item 3: Additional Drivers -->
+    <!-- Item 3: Card on File -->
+    <div class="checklist-item" id="item-card" onclick="openCardOverlay()">
+      <div class="check-icon" id="check-card">✓</div>
+      <div class="checklist-body">
+        <strong>Add a Card on File <span class="mandatory-tag">Mandatory</span></strong>
+        <span id="card-status-text">Required for your campervan rental security.</span>
+      </div>
+      <div class="checklist-arrow" id="card-arrow">›</div>
+    </div>
+
+    <!-- Item 4: Additional Drivers -->
     <div class="checklist-item" id="item-drivers" onclick="openFormOverlay('drivers')">
       <div class="check-icon" id="check-drivers">✓</div>
       <div class="checklist-body">
         <strong>Add Additional Drivers <span class="optional-tag">Optional</span></strong>
         <span>Add details for any other drivers joining your trip.</span>
+      </div>
+      <div class="checklist-arrow">›</div>
+    </div>
+
+    <!-- Item 5: Rental Agreement — locked until mandatory items done -->
+    <div class="checklist-item locked" id="item-agreement" onclick="openAgreementOverlay()">
+      <div class="check-icon" id="check-agreement">✓</div>
+      <div class="checklist-body">
+        <strong>Sign Rental Agreement <span class="mandatory-tag">Mandatory</span> <span class="locked-tag" id="agreement-lock-tag">🔒 Complete above first</span></strong>
+        <span id="agreement-status-text">Available once all mandatory steps are complete.</span>
       </div>
       <div class="checklist-arrow">›</div>
     </div>
@@ -372,16 +409,14 @@
 </div><!-- /card -->
 
 
-<!-- OVERLAYS -->
+<!-- ══ FORM OVERLAYS ══ -->
 
 <div class="overlay" id="overlay-license">
   <div class="overlay-inner">
     <button class="overlay-close" onclick="closeOverlay('license')">×</button>
     <div class="overlay-title">Add Driver's License Information</div>
     <hr class="divider">
-    <p style="color:#666;font-size:14px;margin-bottom:16px;text-align:center;">
-      Please complete the form below. Your booking details will be pre-filled automatically.
-    </p>
+    <p style="color:#666;font-size:14px;margin-bottom:16px;text-align:center;">Please complete the form below. Your booking details will be pre-filled automatically.</p>
     <div id="survey-iframe-license"></div>
   </div>
 </div>
@@ -391,9 +426,7 @@
     <button class="overlay-close" onclick="closeOverlay('drivers')">×</button>
     <div class="overlay-title">Add Additional Drivers</div>
     <hr class="divider">
-    <p style="color:#666;font-size:14px;margin-bottom:16px;text-align:center;">
-      Add details for any additional drivers on your booking.
-    </p>
+    <p style="color:#666;font-size:14px;margin-bottom:16px;text-align:center;">Add details for any additional drivers on your booking.</p>
     <div id="survey-iframe-drivers"></div>
   </div>
 </div>
@@ -403,15 +436,103 @@
     <button class="overlay-close" onclick="closeOverlay('videos')">×</button>
     <div class="overlay-title">Drive Safe Guide & Campervan Onboarding Videos</div>
     <hr class="divider">
-    <p style="color:#666;font-size:14px;margin-bottom:16px;text-align:center;">
-      Watch the videos and complete the form to confirm you have viewed them.
-    </p>
+    <p style="color:#666;font-size:14px;margin-bottom:16px;text-align:center;">Watch the videos and complete the form to confirm you have viewed them.</p>
     <div id="survey-iframe-videos"></div>
   </div>
 </div>
 
+<!-- ══ CARD ON FILE OVERLAY ══ -->
+<div class="overlay" id="overlay-card">
+  <div class="overlay-inner">
+    <button class="overlay-close" onclick="closeOverlay('card')">×</button>
+    <div class="overlay-title">💳 Add a Card on File</div>
+    <hr class="divider">
 
-<!-- SUCCESS MODAL -->
+    <div class="card-disclaimer">
+      <strong>Why do we need this?</strong><br>
+      As part of your campervan rental, Waka Campa requires a valid credit or debit card to be held on file. This covers any potential damage, excess charges, or incidentals that may arise during your hire. Your card will not be charged without prior notification.
+    </div>
+
+    <!-- Step 1: choose option -->
+    <div id="card-step-choose">
+      <p style="font-size:15px;font-weight:bold;margin-bottom:14px;text-align:center;">How would you like to proceed?</p>
+
+      <div class="card-option" onclick="submitCardRequest('request')">
+        <div class="card-option-icon">📞</div>
+        <div class="card-option-body">
+          <strong>Request Card Entry</strong>
+          <p>A member of our support team will reach out to you right away to securely collect your card details via our vault.</p>
+        </div>
+      </div>
+
+      <div class="card-option" onclick="submitCardRequest('existing')">
+        <div class="card-option-icon">✅</div>
+        <div class="card-option-body">
+          <strong>I Already Have a Card on File</strong>
+          <p>If you've previously provided card details, let us know. Our team will verify and mark this step as complete shortly.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 2: confirmation message -->
+    <div id="card-step-confirm" style="display:none;text-align:center;padding:10px 0;">
+      <div style="font-size:48px;margin-bottom:12px;" id="card-confirm-icon">📞</div>
+      <h3 style="margin-bottom:10px;" id="card-confirm-title">Request Sent!</h3>
+      <p style="color:#555;font-size:14px;line-height:1.7;margin-bottom:20px;" id="card-confirm-body"></p>
+      <button class="btn-primary" onclick="closeOverlay('card')" style="font-size:15px;padding:13px;">Close</button>
+      <div id="card-check-btn-area" style="margin-top:12px;">
+        <button class="check-status-btn" id="card-check-btn" onclick="manualCheckStatus('card')">
+          🔄 Check Verification Status
+        </button>
+        <p style="font-size:12px;color:#9ca3af;text-align:center;margin-top:8px;">Click after our team confirms your card to update this page.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ RENTAL AGREEMENT OVERLAY ══ -->
+<div class="overlay" id="overlay-agreement">
+  <div class="overlay-inner">
+    <button class="overlay-close" onclick="closeOverlay('agreement')">×</button>
+    <div class="overlay-title">📄 Sign Rental Agreement</div>
+    <hr class="divider">
+
+    <!-- Locked state -->
+    <div id="agreement-locked-msg" style="display:none;text-align:center;padding:20px 0;">
+      <div style="font-size:48px;margin-bottom:12px;">🔒</div>
+      <p style="color:#555;font-size:15px;">Please complete all mandatory checklist items first before accessing the rental agreement.</p>
+    </div>
+
+    <!-- Active state -->
+    <div id="agreement-active">
+      <div class="agreement-disclaimer">
+        <strong>Rental Agreement Request</strong><br>
+        By requesting your rental agreement, our team will prepare and send it to your email address on file. Once you have reviewed and signed the agreement, this step will be automatically marked as complete.
+      </div>
+
+      <!-- Status panel -->
+      <div class="agreement-status-box" id="agreement-status-box">
+        <div class="status-icon" id="agreement-status-icon">📋</div>
+        <p id="agreement-status-desc">Your rental agreement has not yet been sent. Click below to request it.</p>
+      </div>
+
+      <div id="agreement-request-btn-area">
+        <button class="btn-primary" onclick="submitAgreementRequest()" style="font-size:15px;padding:13px;">
+          📨 Request Rental Agreement
+        </button>
+      </div>
+      <div id="agreement-polling-note" style="display:none;">
+        <button class="check-status-btn" id="agreement-check-btn" onclick="manualCheckStatus('agreement')">
+          🔄 Check Signature Status
+        </button>
+        <p style="font-size:12px;color:#9ca3af;text-align:center;margin-top:8px;">Click after signing your agreement to update this page.</p>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ══ SUCCESS MODAL ══ -->
 <div id="success-modal">
   <div class="success-box">
     <div class="success-icon">🎉</div>
@@ -423,16 +544,22 @@
 
 
 <script>
-// ── State ─────────────────────────────────────────────────────────────────────
+// ════════════════════════════════════════════════════════════
+// STATE
+// ════════════════════════════════════════════════════════════
 let currentBookingNum    = '';
 let currentLastName      = '';
 let currentEmail         = '';
 let currentOpportunityId = '';
-let originalBeddings     = null;   // value from the API
-let selectedBeddings     = null;   // what the customer chose
+let originalBeddings     = null;
+let selectedBeddings     = null;
+let agreementRequested   = false;
+let cardAction           = null;  // 'request' | 'existing'
 
-const ITEMS     = ['license', 'drivers', 'videos'];
-const MANDATORY = ['license', 'videos'];
+const ITEMS     = ['license', 'videos', 'card', 'drivers', 'agreement'];
+const MANDATORY = ['license', 'videos', 'card', 'agreement'];
+// Agreement is the last mandatory — unlocks only when the others are done
+const PRE_AGREEMENT_MANDATORY = ['license', 'videos', 'card'];
 
 const surveyIds = {
   license: 'rs0MCHeDrS3n4Ouy9cQI',
@@ -440,79 +567,133 @@ const surveyIds = {
   videos:  'msvAaM2jMlXUWySQwEOH',
 };
 
-let completed = { license: false, drivers: false, videos: false };
+let completed = { license: false, videos: false, card: false, drivers: false, agreement: false };
 
-// ── localStorage helpers ──────────────────────────────────────────────────────
-function storageKey(bookingNum) { return 'checkin_completed_' + bookingNum; }
+// ════════════════════════════════════════════════════════════
+// WEBHOOKS  — replace URLs below with your real n8n endpoints
+// ════════════════════════════════════════════════════════════
+const WEBHOOK_ACTION   = 'https://n8n.wakacampa.com/webhook/083419b8-116b-4354-b289-8d9f0fdc2eef';
+const WEBHOOK_POLL     = 'https://n8n.wakacampa.com/webhook/checkin-status-poll'; // NEW: returns { cardDone, agreementSigned }
+const WEBHOOK_MAIN     = 'https://n8n.wakacampa.com/webhook/e4ffaa0c-c076-4d23-8b69-9ac0f8d6a6bb';
 
+// ════════════════════════════════════════════════════════════
+// LOCALSTORAGE
+// ════════════════════════════════════════════════════════════
+function storageKey(b) { return 'checkin_completed_' + b; }
 function saveCompleted() {
   try { localStorage.setItem(storageKey(currentBookingNum), JSON.stringify(completed)); } catch(e) {}
 }
-
-function loadCompleted(bookingNum) {
-  try {
-    const saved = localStorage.getItem(storageKey(bookingNum));
-    if (saved) return JSON.parse(saved);
-  } catch(e) {}
-  return { license: false, drivers: false, videos: false };
+function loadCompleted(b) {
+  try { const s = localStorage.getItem(storageKey(b)); if (s) return JSON.parse(s); } catch(e) {}
+  return { license: false, videos: false, card: false, drivers: false, agreement: false };
+}
+function saveCardAction(a) {
+  try { localStorage.setItem('checkin_cardaction_' + currentBookingNum, a); } catch(e) {}
+}
+function loadCardAction(b) {
+  try { return localStorage.getItem('checkin_cardaction_' + b) || null; } catch(e) { return null; }
 }
 
-// ── Bedding selector ──────────────────────────────────────────────────────────
-function initBedding(valueFromAPI) {
-  // Parse to int; default to 1 if missing/invalid
-  const parsed = parseInt(valueFromAPI);
-  originalBeddings = (!isNaN(parsed) && parsed >= 1 && parsed <= 3) ? parsed : 1;
+// ════════════════════════════════════════════════════════════
+// BEDDING
+// ════════════════════════════════════════════════════════════
+function initBedding(v) {
+  const p = parseInt(v);
+  originalBeddings = (!isNaN(p) && p >= 1 && p <= 3) ? p : 1;
   selectedBeddings = originalBeddings;
-
   document.getElementById('bedding-current-value').textContent = originalBeddings;
   highlightBeddingBtn(originalBeddings);
   document.getElementById('bedding-changed-badge').style.display = 'none';
 }
-
 function selectBedding(n) {
   selectedBeddings = n;
   highlightBeddingBtn(n);
-  const changed = n !== originalBeddings;
-  document.getElementById('bedding-changed-badge').style.display = changed ? 'inline' : 'none';
+  document.getElementById('bedding-changed-badge').style.display = n !== originalBeddings ? 'inline' : 'none';
 }
-
 function highlightBeddingBtn(n) {
-  [1, 2, 3].forEach(i => {
-    const btn = document.getElementById('bedding-btn-' + i);
-    btn.classList.toggle('selected', i === n);
-  });
+  [1,2,3].forEach(i => document.getElementById('bedding-btn-'+i).classList.toggle('selected', i === n));
 }
 
-// ── Helpers ───────────────────────────────────────────────────────────────────
-function formatDate(dateStr) {
-  if (!dateStr || dateStr === 'N/A') return 'N/A';
-  const d = new Date(dateStr);
-  if (isNaN(d.getTime())) return dateStr;
-  const months = ['January','February','March','April','May','June',
-                  'July','August','September','October','November','December'];
-  return months[d.getMonth()] + ' ' + d.getDate() + ', ' + d.getFullYear();
+// ════════════════════════════════════════════════════════════
+// HELPERS
+// ════════════════════════════════════════════════════════════
+function formatDate(s) {
+  if (!s || s === 'N/A') return 'N/A';
+  const d = new Date(s);
+  if (isNaN(d.getTime())) return s;
+  const m = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+  return m[d.getMonth()] + ' ' + d.getDate() + ', ' + d.getFullYear();
+}
+function showError(msg) { const e = document.getElementById('error-msg'); e.textContent = msg; e.style.display = 'block'; }
+function clearError()   { const e = document.getElementById('error-msg'); e.textContent = ''; e.style.display = 'none'; }
+function row(label, val) {
+  if (!val || val === 'N/A') return '';
+  return '<div><strong>' + label + ':</strong> ' + val + '</div>';
 }
 
-function showError(msg) {
-  const el = document.getElementById('error-msg');
-  el.textContent = msg;
-  el.style.display = 'block';
-}
-
-function clearError() {
-  const el = document.getElementById('error-msg');
-  el.textContent = '';
-  el.style.display = 'none';
-}
-
-function row(label, value) {
-  if (!value || value === 'N/A') return '';
-  return '<div><strong>' + label + ':</strong> ' + value + '</div>';
-}
-
+// ════════════════════════════════════════════════════════════
+// UI STATE — apply completed / locked styles
+// ════════════════════════════════════════════════════════════
 function applyCompletedUI() {
+  const preAgreementDone = PRE_AGREEMENT_MANDATORY.every(t => completed[t]);
+
   ITEMS.forEach(type => {
     const item = document.getElementById('item-' + type);
+    if (!item) return;
+
+    // Agreement: special locking logic
+    if (type === 'agreement') {
+      const lockTag  = document.getElementById('agreement-lock-tag');
+      const statusTx = document.getElementById('agreement-status-text');
+      if (completed.agreement) {
+        item.classList.remove('locked','pending-verification');
+        item.classList.add('completed');
+        item.onclick = null;
+        if (lockTag) lockTag.style.display = 'none';
+        if (statusTx) statusTx.textContent = 'Agreement signed — all done!';
+      } else if (!preAgreementDone) {
+        item.classList.add('locked');
+        item.classList.remove('completed','pending-verification');
+        item.onclick = null;
+        if (lockTag) lockTag.style.display = 'inline';
+        if (statusTx) statusTx.textContent = 'Available once all mandatory steps are complete.';
+      } else {
+        item.classList.remove('locked','completed','pending-verification');
+        item.onclick = openAgreementOverlay;
+        if (lockTag) lockTag.style.display = 'none';
+        if (statusTx) statusTx.textContent = agreementRequested
+          ? 'Agreement sent — awaiting your signature.'
+          : 'Click to request your rental agreement.';
+      }
+      return;
+    }
+
+    // Card: pending state
+    if (type === 'card') {
+      const statusTx = document.getElementById('card-status-text');
+      if (completed.card) {
+        item.classList.remove('pending-verification');
+        item.classList.add('completed');
+        item.onclick = null;
+        document.getElementById('card-arrow').style.display = 'none';
+        if (statusTx) statusTx.textContent = 'Card verified and on file.';
+      } else if (cardAction) {
+        item.classList.add('pending-verification');
+        item.classList.remove('completed');
+        document.getElementById('check-card').textContent = '⏳';
+        item.onclick = openCardOverlay;
+        if (statusTx) statusTx.textContent = cardAction === 'request'
+          ? 'Team will contact you shortly to collect card details.'
+          : 'Awaiting verification by our team.';
+      } else {
+        item.classList.remove('completed','pending-verification');
+        item.onclick = openCardOverlay;
+        if (statusTx) statusTx.textContent = 'Required for your campervan rental security.';
+      }
+      return;
+    }
+
+    // Standard items
     if (completed[type]) {
       item.classList.add('completed');
       item.onclick = null;
@@ -521,43 +702,44 @@ function applyCompletedUI() {
       item.onclick = function() { openFormOverlay(type); };
     }
   });
+
   checkAllDone();
 }
 
-// ── Keyboard shortcuts ────────────────────────────────────────────────────────
-document.getElementById('booking-input').addEventListener('keydown', function(e) {
-  if (e.key === 'Enter') document.getElementById('verify-btn').click();
-});
-document.getElementById('lastname-input').addEventListener('keydown', function(e) {
-  if (e.key === 'Enter') document.getElementById('verify-btn').click();
-});
-document.getElementById('booking-input').addEventListener('input', function() {
-  this.value = this.value.replace(/[^0-9]/g, '');
-});
+// ════════════════════════════════════════════════════════════
+// CHECK ALL DONE
+// ════════════════════════════════════════════════════════════
+function checkAllDone() {
+  const allDone = MANDATORY.every(t => completed[t]);
+  document.getElementById('checklist-submit-area').style.display = allDone ? 'block' : 'none';
+}
 
-// ── Verify booking ────────────────────────────────────────────────────────────
+// ════════════════════════════════════════════════════════════
+// KEYBOARD / INPUT
+// ════════════════════════════════════════════════════════════
+document.getElementById('booking-input').addEventListener('keydown', e => { if (e.key==='Enter') document.getElementById('verify-btn').click(); });
+document.getElementById('lastname-input').addEventListener('keydown', e => { if (e.key==='Enter') document.getElementById('verify-btn').click(); });
+document.getElementById('booking-input').addEventListener('input', function() { this.value = this.value.replace(/[^0-9]/g,''); });
+
+// ════════════════════════════════════════════════════════════
+// VERIFY BOOKING
+// ════════════════════════════════════════════════════════════
 document.getElementById('verify-btn').onclick = async function(e) {
   e.preventDefault();
   clearError();
-
   currentBookingNum = document.getElementById('booking-input').value.trim();
   currentLastName   = document.getElementById('lastname-input').value.trim().toLowerCase();
-
-  if (!currentBookingNum || !currentLastName) {
-    showError('Please enter both fields.');
-    return;
-  }
+  if (!currentBookingNum || !currentLastName) { showError('Please enter both fields.'); return; }
 
   document.getElementById('form-section').style.display = 'none';
   document.getElementById('loading').style.display      = 'block';
 
   try {
-    const response = await fetch('https://n8n.wakacampa.com/webhook/e4ffaa0c-c076-4d23-8b69-9ac0f8d6a6bb', {
+    const response = await fetch(WEBHOOK_MAIN, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ bookingNum: currentBookingNum, lastName: currentLastName })
     });
-
     let result;
     if (response.status === 204) {
       result = { success: false, message: 'Booking not found.' };
@@ -565,7 +747,6 @@ document.getElementById('verify-btn').onclick = async function(e) {
       const json = await response.json();
       result = Array.isArray(json) ? json[0] : json;
     }
-
     document.getElementById('loading').style.display = 'none';
 
     if (result && result.success && result.data) {
@@ -573,10 +754,11 @@ document.getElementById('verify-btn').onclick = async function(e) {
       currentEmail         = d.hirerEmail || d.email || '';
       currentOpportunityId = d.opportunityId || '';
 
-      completed = loadCompleted(currentBookingNum);
+      completed        = loadCompleted(currentBookingNum);
+      cardAction       = loadCardAction(currentBookingNum);
+      agreementRequested = !!localStorage.getItem('checkin_agr_' + currentBookingNum);
 
       document.getElementById('booking-number-display').textContent = 'Booking # ' + (d.bookingNum || 'N/A');
-
       document.getElementById('booking-info').innerHTML =
         row('Pickup Date',      formatDate(d.pickupDate))  +
         row('Pickup Time',      d.pickupTime)              +
@@ -584,7 +766,6 @@ document.getElementById('verify-btn').onclick = async function(e) {
         row('Dropoff Date',     formatDate(d.dropoffDate)) +
         row('Dropoff Time',     d.dropoffTime)             +
         row('Dropoff Location', d.dropoffLocation);
-
       document.getElementById('contact-info').innerHTML =
         row('Full Name', d.hirerFullName)         +
         row('Email',     d.hirerEmail || d.email) +
@@ -599,87 +780,73 @@ document.getElementById('verify-btn').onclick = async function(e) {
           row('Registration Number', d.vehicleRegistrationNumber);
         document.getElementById('vehicle-section').style.display = 'block';
       }
-
-      // Initialise bedding selector with value from API
       initBedding(d.numberofbeddings);
-
       document.getElementById('booking-details').style.display = 'block';
       document.getElementById('booking-actions').style.display = 'block';
-
     } else {
       document.getElementById('form-section').style.display = 'block';
       showError(result.message || 'Booking not found. Please check your details and try again.');
     }
-
-  } catch (err) {
+  } catch(err) {
     document.getElementById('loading').style.display      = 'none';
     document.getElementById('form-section').style.display = 'block';
     showError('Connection error: ' + (err.message || err));
   }
 };
 
-// ── Confirm booking → show checklist ─────────────────────────────────────────
+// ════════════════════════════════════════════════════════════
+// CONFIRM → CHECKLIST
+// ════════════════════════════════════════════════════════════
 document.getElementById('confirm-btn').onclick = function() {
   document.getElementById('booking-actions').style.display   = 'none';
   document.getElementById('checklist-section').style.display = 'block';
   applyCompletedUI();
+  // Resume polling if we had pending items on a previous session
 };
 
-// ── Open form overlay ─────────────────────────────────────────────────────────
+// ════════════════════════════════════════════════════════════
+// GHL FORM OVERLAYS
+// ════════════════════════════════════════════════════════════
 function openFormOverlay(type) {
   const surveyId = surveyIds[type];
-  if (!surveyId) { console.error('No survey ID for type:', type); return; }
-
-  const cacheBuster = Date.now();
-  const surveyUrl   = 'https://api.leadconnectorhq.com/widget/survey/' + surveyId
+  if (!surveyId) { console.error('No survey ID for:', type); return; }
+  const cb  = Date.now();
+  const url = 'https://api.leadconnectorhq.com/widget/survey/' + surveyId
     + '?email='          + encodeURIComponent(currentEmail)
     + '&booking_number=' + encodeURIComponent(currentBookingNum)
-    + '&t='              + cacheBuster;
-
-  const container = document.getElementById('survey-iframe-' + type);
-  container.innerHTML = '';
-
-  const iframe         = document.createElement('iframe');
-  iframe.src           = surveyUrl;
-  iframe.style.cssText = 'border:none;width:100%;height:600px;display:block;';
-  iframe.scrolling     = 'no';
-  iframe.id            = surveyId;
-  iframe.title         = 'survey';
-  container.appendChild(iframe);
-
+    + '&t='              + cb;
+  const c = document.getElementById('survey-iframe-' + type);
+  c.innerHTML = '';
+  const f = document.createElement('iframe');
+  f.src = url; f.style.cssText = 'border:none;width:100%;height:600px;display:block;';
+  f.scrolling = 'no'; f.id = surveyId; f.title = 'survey';
+  c.appendChild(f);
   if (!document.querySelector('script[src*="form_embed.js"]')) {
-    const script = document.createElement('script');
-    script.src   = 'https://link.msgsndr.com/js/form_embed.js?t=' + cacheBuster;
-    document.head.appendChild(script);
+    const s = document.createElement('script');
+    s.src = 'https://link.msgsndr.com/js/form_embed.js?t=' + cb;
+    document.head.appendChild(s);
   }
-
   document.getElementById('overlay-' + type).style.display = 'block';
   document.body.style.overflow = 'hidden';
 }
 
-// ── Close form overlay ────────────────────────────────────────────────────────
 function closeOverlay(type) {
-  document.getElementById('overlay-' + type).style.display = 'none';
+  const el = document.getElementById('overlay-' + type);
+  if (el) el.style.display = 'none';
   document.body.style.overflow = '';
 }
 
-// ── GHL postMessage — "set-sticky-contacts" fires after submission ────────────
+// GHL postMessage — fires "set-sticky-contacts" after form submission
 window.addEventListener('message', function(event) {
   const data = event.data;
   if (!data) return;
-
-  let dataStr = '';
-  try { dataStr = typeof data === 'string' ? data : JSON.stringify(data); } catch(e) {}
-
-  const isSubmission =
-    (Array.isArray(data) && data[0] === 'set-sticky-contacts') ||
-    dataStr.includes('set-sticky-contacts');
-
-  if (!isSubmission) return;
-
-  ITEMS.forEach(function(type) {
-    const overlay = document.getElementById('overlay-' + type);
-    if (overlay && overlay.style.display === 'block') {
+  let ds = '';
+  try { ds = typeof data === 'string' ? data : JSON.stringify(data); } catch(e) {}
+  const isSub = (Array.isArray(data) && data[0] === 'set-sticky-contacts') || ds.includes('set-sticky-contacts');
+  if (!isSub) return;
+  ['license','videos','drivers'].forEach(function(type) {
+    const ov = document.getElementById('overlay-' + type);
+    if (ov && ov.style.display === 'block') {
       markComplete(type);
       closeOverlay(type);
       showSuccessModal(type);
@@ -687,23 +854,177 @@ window.addEventListener('message', function(event) {
   });
 });
 
-// ── Mark checklist item complete ──────────────────────────────────────────────
+// ════════════════════════════════════════════════════════════
+// CARD ON FILE OVERLAY
+// ════════════════════════════════════════════════════════════
+function openCardOverlay() {
+  document.getElementById('card-step-choose').style.display  = 'block';
+  document.getElementById('card-step-confirm').style.display = 'none';
+  document.getElementById('overlay-card').style.display      = 'block';
+  document.body.style.overflow = 'hidden';
+}
+
+function submitCardRequest(action) {
+  cardAction = action;
+  saveCardAction(action);
+
+  const isRequest = action === 'request';
+  fetch(WEBHOOK_ACTION, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      type:          isRequest ? 'card_entry_requested' : 'card_already_on_file',
+      booking:       currentBookingNum,
+      lastName:      currentLastName,
+      email:         currentEmail,
+      opportunityId: currentOpportunityId
+    })
+  }).catch(err => console.error('Card webhook error:', err));
+
+  // Show confirm step
+  document.getElementById('card-step-choose').style.display  = 'none';
+  document.getElementById('card-step-confirm').style.display = 'block';
+
+  if (isRequest) {
+    document.getElementById('card-confirm-icon').textContent  = '📞';
+    document.getElementById('card-confirm-title').textContent = 'Request Sent!';
+    document.getElementById('card-confirm-body').textContent  =
+      'A member of our support team will contact you shortly to securely collect your card details via our vault. Please keep an eye on your email and phone.';
+  } else {
+    document.getElementById('card-confirm-icon').textContent  = '🔍';
+    document.getElementById('card-confirm-title').textContent = 'Got it — We\'ll Verify Shortly!';
+    document.getElementById('card-confirm-body').textContent  =
+      'Our team has been notified. We will verify your card on file and mark this step as complete. This usually happens within a few minutes.';
+  }
+
+  applyCompletedUI();
+}
+
+// ════════════════════════════════════════════════════════════
+// RENTAL AGREEMENT OVERLAY
+// ════════════════════════════════════════════════════════════
+function openAgreementOverlay() {
+  const preAgreementDone = PRE_AGREEMENT_MANDATORY.every(t => completed[t]);
+  document.getElementById('agreement-locked-msg').style.display = preAgreementDone ? 'none' : 'block';
+  document.getElementById('agreement-active').style.display     = preAgreementDone ? 'block' : 'none';
+
+  if (preAgreementDone && agreementRequested) {
+    // Already requested — show waiting state
+    document.getElementById('agreement-status-icon').textContent = '⏳';
+    document.getElementById('agreement-status-desc').textContent = 'Agreement sent to your email. Awaiting your signature. This page will update automatically once signed.';
+    document.getElementById('agreement-request-btn-area').style.display = 'none';
+    document.getElementById('agreement-polling-note').style.display     = 'block';
+  } else if (preAgreementDone) {
+    document.getElementById('agreement-status-icon').textContent = '📋';
+    document.getElementById('agreement-status-desc').textContent = 'Your rental agreement has not yet been sent. Click below to request it.';
+    document.getElementById('agreement-request-btn-area').style.display = 'block';
+    document.getElementById('agreement-polling-note').style.display     = 'none';
+  }
+
+  document.getElementById('overlay-agreement').style.display = 'block';
+  document.body.style.overflow = 'hidden';
+}
+
+function submitAgreementRequest() {
+  agreementRequested = true;
+  try { localStorage.setItem('checkin_agr_' + currentBookingNum, '1'); } catch(e) {}
+
+  fetch(WEBHOOK_ACTION, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      type:          'rental_agreement_requested',
+      booking:       currentBookingNum,
+      lastName:      currentLastName,
+      email:         currentEmail,
+      opportunityId: currentOpportunityId
+    })
+  }).catch(err => console.error('Agreement webhook error:', err));
+
+  document.getElementById('agreement-status-icon').textContent          = '⏳';
+  document.getElementById('agreement-status-desc').textContent          = 'Agreement sent to your email. Please review and sign it. This page will update automatically once signed.';
+  document.getElementById('agreement-request-btn-area').style.display   = 'none';
+  document.getElementById('agreement-polling-note').style.display        = 'block';
+
+  applyCompletedUI();
+}
+
+// ════════════════════════════════════════════════════════════
+// MANUAL STATUS CHECK — customer clicks button, fires one call
+// ════════════════════════════════════════════════════════════
+
+/*
+  WEBHOOK_POLL should accept:
+    { booking, opportunityId, check: 'card' | 'agreement' }
+  and return:
+    { done: true | false }
+
+  For "card":      n8n checks if the GHL task is marked completed.
+  For "agreement": n8n calls RCM API and checks issigned === true.
+*/
+
+async function manualCheckStatus(type) {
+  const btn = document.getElementById(type + '-check-btn');
+  if (btn) { btn.disabled = true; btn.textContent = '⏳ Checking…'; }
+
+  try {
+    const res  = await fetch(WEBHOOK_POLL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ booking: currentBookingNum, opportunityId: currentOpportunityId, check: type })
+    });
+    const data = await res.json();
+
+    if (data && data.done) {
+      markComplete(type);
+      closeOverlay(type === 'agreement' ? 'agreement' : 'card');
+      showSuccessModal(type);
+    } else {
+      if (btn) {
+        btn.disabled    = false;
+        btn.textContent = type === 'card' ? '🔄 Check Verification Status' : '🔄 Check Signature Status';
+      }
+      // Show a gentle "not yet" message below the button
+      const noteId = type === 'card' ? 'card-not-yet-msg' : 'agr-not-yet-msg';
+      let noteEl = document.getElementById(noteId);
+      if (!noteEl) {
+        noteEl = document.createElement('p');
+        noteEl.id = noteId;
+        noteEl.style.cssText = 'font-size:13px;color:#ef4444;text-align:center;margin-top:6px;';
+        if (btn) btn.parentNode.appendChild(noteEl);
+      }
+      noteEl.textContent = type === 'card'
+        ? 'Not verified yet — our team is working on it. Try again in a moment.'
+        : 'Not signed yet. Please check your email and sign the agreement first.';
+    }
+  } catch(err) {
+    if (btn) { btn.disabled = false; btn.textContent = type === 'card' ? '🔄 Check Verification Status' : '🔄 Check Signature Status'; }
+    console.error('Status check error:', err);
+  }
+}
+
+// Kept as no-ops so logout reset still compiles cleanly
+function startCardPolling()      {}
+function startAgreementPolling() {}
+
+// ════════════════════════════════════════════════════════════
+// MARK COMPLETE
+// ════════════════════════════════════════════════════════════
 function markComplete(type) {
   completed[type] = true;
   saveCompleted();
   applyCompletedUI();
 }
 
-function checkAllDone() {
-  const allMandatoryDone = MANDATORY.every(function(t) { return completed[t]; });
-  document.getElementById('checklist-submit-area').style.display = allMandatoryDone ? 'block' : 'none';
-}
-
-// ── Success modal ─────────────────────────────────────────────────────────────
+// ════════════════════════════════════════════════════════════
+// SUCCESS MODAL
+// ════════════════════════════════════════════════════════════
 const successMessages = {
-  license: { title: 'License Details Submitted!',   body: "We've received your driver's license information." },
-  drivers: { title: 'Additional Drivers Added!',     body: 'Additional driver information has been submitted successfully.' },
-  videos:  { title: 'Videos Confirmed!',             body: "Thanks for watching the onboarding and safety videos. You're all set!" }
+  license:   { title: 'License Details Submitted!',   body: "We've received your driver's license information." },
+  drivers:   { title: 'Additional Drivers Added!',    body: 'Additional driver information has been submitted successfully.' },
+  videos:    { title: 'Videos Confirmed!',            body: "Thanks for watching the onboarding and safety videos. You're all set!" },
+  card:      { title: 'Card Verified! ✅',            body: 'Your card on file has been confirmed by our team.' },
+  agreement: { title: 'Agreement Signed! ✅',         body: 'Your rental agreement is signed and complete. You\'re all set!' }
 };
 
 function showSuccessModal(type) {
@@ -712,37 +1033,37 @@ function showSuccessModal(type) {
   document.getElementById('success-body').textContent  = msg.body;
   document.getElementById('success-modal').classList.add('show');
 }
+function closeSuccessModal() { document.getElementById('success-modal').classList.remove('show'); }
 
-function closeSuccessModal() {
-  document.getElementById('success-modal').classList.remove('show');
-}
-
-// ── Final check-in submission ─────────────────────────────────────────────────
+// ════════════════════════════════════════════════════════════
+// FINAL CHECK-IN SUBMISSION
+// ════════════════════════════════════════════════════════════
 function submitCheckin() {
-  const beddingChanged  = selectedBeddings !== originalBeddings;
-
-  fetch('https://n8n.wakacampa.com/webhook/083419b8-116b-4354-b289-8d9f0fdc2eef', {
+  fetch(WEBHOOK_ACTION, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
-      type:                  'check_in_completed',
-      booking:               currentBookingNum,
-      lastName:              currentLastName,
-      email:                 currentEmail,
-      opportunityId:         currentOpportunityId,
-      completedItems:        completed,
-      numberOfBeddings:      selectedBeddings,
-      originalBeddings:      originalBeddings,
-      beddingChanged:        beddingChanged
+      type:             'check_in_completed',
+      booking:          currentBookingNum,
+      lastName:         currentLastName,
+      email:            currentEmail,
+      opportunityId:    currentOpportunityId,
+      completedItems:   completed,
+      numberOfBeddings: selectedBeddings,
+      originalBeddings: originalBeddings,
+      beddingChanged:   selectedBeddings !== originalBeddings,
+      cardAction:       cardAction
     })
-  }).catch(function(err) { console.error('Check-in submit error:', err); });
+  }).catch(err => console.error('Check-in submit error:', err));
 
   document.getElementById('success-title').textContent = '✅ Check-In Complete!';
   document.getElementById('success-body').textContent  = 'Your check-in is complete. Our team has been notified. See you on the road! 🚐';
   document.getElementById('success-modal').classList.add('show');
 }
 
-// ── Log out / reset ───────────────────────────────────────────────────────────
+// ════════════════════════════════════════════════════════════
+// LOG OUT / RESET
+// ════════════════════════════════════════════════════════════
 function goBackToForm() {
   ['form-section','booking-details','booking-actions','checklist-section'].forEach(function(id) {
     document.getElementById(id).style.display = id === 'form-section' ? 'block' : 'none';
@@ -759,18 +1080,24 @@ function goBackToForm() {
   currentOpportunityId = '';
   originalBeddings     = null;
   selectedBeddings     = null;
-  completed = { license: false, drivers: false, videos: false };
+  agreementRequested   = false;
+  cardAction           = null;
+  completed = { license: false, videos: false, card: false, drivers: false, agreement: false };
 
   ITEMS.forEach(function(type) {
     const item = document.getElementById('item-' + type);
-    item.classList.remove('completed');
-    item.onclick = function() { openFormOverlay(type); };
+    if (!item) return;
+    item.classList.remove('completed','pending-verification','locked');
+    if (!['card','agreement'].includes(type)) {
+      item.onclick = function() { openFormOverlay(type); };
+    }
   });
   document.getElementById('checklist-submit-area').style.display = 'none';
   document.getElementById('bedding-changed-badge').style.display = 'none';
-  [1,2,3].forEach(function(i) {
-    document.getElementById('bedding-btn-' + i).classList.remove('selected');
-  });
+  [1,2,3].forEach(function(i) { document.getElementById('bedding-btn-'+i).classList.remove('selected'); });
+  document.getElementById('check-card').textContent = '✓';
+  document.getElementById('card-arrow').style.display = '';
+  document.getElementById('agreement-lock-tag').style.display = 'inline';
 }
 </script>
 
