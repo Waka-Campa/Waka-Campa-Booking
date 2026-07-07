@@ -688,7 +688,7 @@ function formatDate(dateStr) {
   const date = new Date(dateStr);
   if (isNaN(date.getTime())) return 'N/A';
   const months = ['January','February','March','April','May','June','July','August','September','October','November','December'];
-  return `${months[date.getMonth()]}, ${date.getDate()}, ${date.getFullYear()}`;
+  return `${months[date.getUTCMonth()]} ${date.getUTCDate()}, ${date.getUTCFullYear()}`;
 }
 
 function formatCurrency(amount) {
