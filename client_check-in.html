@@ -617,12 +617,12 @@ function highlightBeddingBtn(n) {
 // ════════════════════════════════════════════════════════════
 // HELPERS
 // ════════════════════════════════════════════════════════════
-function formatDate(s) {
-  if (!s || s === 'N/A') return 'N/A';
-  const d = new Date(s);
-  if (isNaN(d.getTime())) return s;
-  const m = ['January','February','March','April','May','June','July','August','September','October','November','December'];
-  return m[d.getMonth()] + ' ' + d.getDate() + ', ' + d.getFullYear();
+function formatDate(dateStr) {
+  if (!dateStr || dateStr === 'N/A') return 'N/A';
+  const date = new Date(dateStr);
+  if (isNaN(date.getTime())) return 'N/A';
+  const months = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+  return `${months[date.getUTCMonth()]} ${date.getUTCDate()}, ${date.getUTCFullYear()}`;
 }
 function showError(msg) { const e = document.getElementById('error-msg'); e.textContent = msg; e.style.display = 'block'; }
 function clearError()   { const e = document.getElementById('error-msg'); e.textContent = ''; e.style.display = 'none'; }
