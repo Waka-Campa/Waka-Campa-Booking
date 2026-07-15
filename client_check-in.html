@@ -347,17 +347,7 @@
       </div>
     </div>
 
-     <!-- Item 1: Additional Drivers -->
-    <div class="checklist-item" id="item-drivers" onclick="openFormOverlay('drivers')">
-      <div class="check-icon" id="check-drivers">✓</div>
-      <div class="checklist-body">
-        <strong>Add Additional Drivers <span class="optional-tag">Optional</span></strong>
-        <span>Add details for any other drivers joining your trip.</span>
-      </div>
-      <div class="checklist-arrow">›</div>
-    </div>
-
-    <!-- Item 2: Driver's License -->
+    <!-- Item 1: Driver's License -->
     <div class="checklist-item" id="item-license" onclick="openFormOverlay('license')">
       <div class="check-icon" id="check-license">✓</div>
       <div class="checklist-body">
@@ -367,17 +357,27 @@
       <div class="checklist-arrow">›</div>
     </div>
 
-    <!-- Item 3: Onboarding Videos -->
-    <div class="checklist-item" id="item-videos" onclick="openFormOverlay('videos')">
-      <div class="check-icon" id="check-videos">✓</div>
+    <!-- Item 2: Drive Safe Guide -->
+    <div class="checklist-item" id="item-drivesafe" onclick="openFormOverlay('drivesafe')">
+      <div class="check-icon" id="check-drivesafe">✓</div>
       <div class="checklist-body">
-        <strong>Watch Drive Safe Guide & Onboarding Videos <span class="mandatory-tag">Mandatory</span></strong>
-        <span>Watch our safety guide and campervan orientation videos.</span>
+        <strong>Watch Drive Safe Guide <span class="mandatory-tag">Mandatory</span></strong>
+        <span>Watch our drive safe guide before your hire begins.</span>
       </div>
       <div class="checklist-arrow">›</div>
     </div>
 
-    <!-- Item 4: Card on File -->
+    <!-- Item 3: Campervan Onboarding Videos -->
+    <div class="checklist-item" id="item-onboarding" onclick="openFormOverlay('onboarding')">
+      <div class="check-icon" id="check-onboarding">✓</div>
+      <div class="checklist-body">
+        <strong>Watch Campervan Onboarding Videos <span class="mandatory-tag">Mandatory</span></strong>
+        <span>Watch our campervan orientation videos to get familiar with your vehicle.</span>
+      </div>
+      <div class="checklist-arrow">›</div>
+    </div>
+
+    <!-- Item 3: Card on File -->
     <div class="checklist-item" id="item-card" onclick="openCardOverlay()">
       <div class="check-icon" id="check-card">✓</div>
       <div class="checklist-body">
@@ -385,6 +385,16 @@
         <span id="card-status-text">Required for your campervan rental security.</span>
       </div>
       <div class="checklist-arrow" id="card-arrow">›</div>
+    </div>
+
+    <!-- Item 4: Additional Drivers -->
+    <div class="checklist-item" id="item-drivers" onclick="openFormOverlay('drivers')">
+      <div class="check-icon" id="check-drivers">✓</div>
+      <div class="checklist-body">
+        <strong>Add Additional Drivers <span class="optional-tag">Optional</span></strong>
+        <span>Add details for any other drivers joining your trip.</span>
+      </div>
+      <div class="checklist-arrow">›</div>
     </div>
 
     <!-- Item 5: Rental Agreement — locked until mandatory items done -->
@@ -431,13 +441,23 @@
   </div>
 </div>
 
-<div class="overlay" id="overlay-videos">
+<div class="overlay" id="overlay-drivesafe">
   <div class="overlay-inner">
-    <button class="overlay-close" onclick="closeOverlay('videos')">×</button>
-    <div class="overlay-title">Drive Safe Guide & Campervan Onboarding Videos</div>
+    <button class="overlay-close" onclick="closeOverlay('drivesafe')">×</button>
+    <div class="overlay-title">Watch Drive Safe Guide</div>
     <hr class="divider">
-    <p style="color:#666;font-size:14px;margin-bottom:16px;text-align:center;">Watch the videos and complete the form to confirm you have viewed them.</p>
-    <div id="survey-iframe-videos"></div>
+    <p style="color:#666;font-size:14px;margin-bottom:16px;text-align:center;">Please watch the drive safe guide and complete the form to confirm you have viewed it.</p>
+    <div id="survey-iframe-drivesafe"></div>
+  </div>
+</div>
+
+<div class="overlay" id="overlay-onboarding">
+  <div class="overlay-inner">
+    <button class="overlay-close" onclick="closeOverlay('onboarding')">×</button>
+    <div class="overlay-title">Watch Campervan Onboarding Videos</div>
+    <hr class="divider">
+    <p style="color:#666;font-size:14px;margin-bottom:16px;text-align:center;">Please watch the campervan orientation videos and complete the form to confirm you have viewed them.</p>
+    <div id="survey-iframe-onboarding"></div>
   </div>
 </div>
 
@@ -556,18 +576,19 @@ let selectedBeddings     = null;
 let agreementRequested   = false;
 let cardAction           = null;  // 'request' | 'existing'
 
-const ITEMS     = ['license', 'videos', 'card', 'drivers', 'agreement'];
-const MANDATORY = ['license', 'videos', 'card', 'agreement'];
+const ITEMS     = ['license', 'drivesafe', 'onboarding', 'card', 'drivers', 'agreement'];
+const MANDATORY = ['license', 'drivesafe', 'onboarding', 'card', 'agreement'];
 // Agreement is the last mandatory — unlocks only when the others are done
-const PRE_AGREEMENT_MANDATORY = ['license', 'videos', 'card'];
+const PRE_AGREEMENT_MANDATORY = ['license', 'drivesafe', 'onboarding', 'card'];
 
 const surveyIds = {
   license: 'rs0MCHeDrS3n4Ouy9cQI',
   drivers: '53xc9WpBaSAQY3heDE6t',
-  videos:  'msvAaM2jMlXUWySQwEOH',
+  drivesafe:  'iQu0SJIEIU4iFEdw6vk9',   // Drive Safe Guide
+  onboarding: 'msvAaM2jMlXUWySQwEOH',   // Campervan Onboarding Videos
 };
 
-let completed = { license: false, videos: false, card: false, drivers: false, agreement: false };
+let completed = { license: false, drivesafe: false, onboarding: false, card: false, drivers: false, agreement: false };
 
 // ════════════════════════════════════════════════════════════
 // WEBHOOKS  — replace URLs below with your real n8n endpoints
@@ -585,7 +606,7 @@ function saveCompleted() {
 }
 function loadCompleted(b) {
   try { const s = localStorage.getItem(storageKey(b)); if (s) return JSON.parse(s); } catch(e) {}
-  return { license: false, videos: false, card: false, drivers: false, agreement: false };
+  return { license: false, drivesafe: false, onboarding: false, card: false, drivers: false, agreement: false };
 }
 function saveCardAction(a) {
   try { localStorage.setItem('checkin_cardaction_' + currentBookingNum, a); } catch(e) {}
@@ -617,12 +638,12 @@ function highlightBeddingBtn(n) {
 // ════════════════════════════════════════════════════════════
 // HELPERS
 // ════════════════════════════════════════════════════════════
-function formatDate(dateStr) {
-  if (!dateStr || dateStr === 'N/A') return 'N/A';
-  const date = new Date(dateStr);
-  if (isNaN(date.getTime())) return 'N/A';
-  const months = ['January','February','March','April','May','June','July','August','September','October','November','December'];
-  return `${months[date.getUTCMonth()]} ${date.getUTCDate()}, ${date.getUTCFullYear()}`;
+function formatDate(s) {
+  if (!s || s === 'N/A') return 'N/A';
+  const d = new Date(s);
+  if (isNaN(d.getTime())) return s;
+  const m = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+  return m[d.getMonth()] + ' ' + d.getDate() + ', ' + d.getFullYear();
 }
 function showError(msg) { const e = document.getElementById('error-msg'); e.textContent = msg; e.style.display = 'block'; }
 function clearError()   { const e = document.getElementById('error-msg'); e.textContent = ''; e.style.display = 'none'; }
@@ -844,7 +865,7 @@ window.addEventListener('message', function(event) {
   try { ds = typeof data === 'string' ? data : JSON.stringify(data); } catch(e) {}
   const isSub = (Array.isArray(data) && data[0] === 'set-sticky-contacts') || ds.includes('set-sticky-contacts');
   if (!isSub) return;
-  ['license','videos','drivers'].forEach(function(type) {
+  ['license','drivesafe','onboarding','drivers'].forEach(function(type) {
     const ov = document.getElementById('overlay-' + type);
     if (ov && ov.style.display === 'block') {
       markComplete(type);
@@ -1022,7 +1043,8 @@ function markComplete(type) {
 const successMessages = {
   license:   { title: 'License Details Submitted!',   body: "We've received your driver's license information." },
   drivers:   { title: 'Additional Drivers Added!',    body: 'Additional driver information has been submitted successfully.' },
-  videos:    { title: 'Videos Confirmed!',            body: "Thanks for watching the onboarding and safety videos. You're all set!" },
+  drivesafe:  { title: 'Drive Safe Guide Done! ✅',    body: 'Thanks for watching the Drive Safe Guide.' },
+  onboarding: { title: 'Onboarding Videos Done! ✅',  body: "Thanks for watching the Campervan Onboarding Videos. You're all set!" },
   card:      { title: 'Card Verified! ✅',            body: 'Your card on file has been confirmed by our team.' },
   agreement: { title: 'Agreement Signed! ✅',         body: 'Your rental agreement is signed and complete. You\'re all set!' }
 };
@@ -1082,7 +1104,7 @@ function goBackToForm() {
   selectedBeddings     = null;
   agreementRequested   = false;
   cardAction           = null;
-  completed = { license: false, videos: false, card: false, drivers: false, agreement: false };
+  completed = { license: false, drivesafe: false, onboarding: false, card: false, drivers: false, agreement: false };
 
   ITEMS.forEach(function(type) {
     const item = document.getElementById('item-' + type);
