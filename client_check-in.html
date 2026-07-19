@@ -551,6 +551,7 @@ let currentBookingNum    = '';
 let currentLastName      = '';
 let currentEmail         = '';
 let currentOpportunityId = '';
+let currentReservationRef = '';
 let originalBeddings     = null;
 let selectedBeddings     = null;
 let agreementRequested   = false;
@@ -790,8 +791,9 @@ document.getElementById('verify-btn').onclick = async function(e) {
 
     if (result && result.success && result.data) {
       const d = result.data;
-      currentEmail         = d.hirerEmail || d.email || '';
-      currentOpportunityId = d.opportunityId || '';
+      currentEmail          = d.hirerEmail || d.email || '';
+      currentOpportunityId  = d.opportunityId || '';
+      currentReservationRef = d.reservationRef || '';
 
       completed        = loadCompleted(currentBookingNum);
       cardAction       = loadCardAction(currentBookingNum);
@@ -820,26 +822,7 @@ document.getElementById('verify-btn').onclick = async function(e) {
         document.getElementById('vehicle-section').style.display = 'block';
       }
       initBedding(d.numberofbeddings);
-
-      // Check RCM for card on file — separate webhook keeps credentials server-side
-      try {
-        const cardCheck = await fetch('https://n8n.wakacampa.com:5678/webhook/03ce904c-93f2-49b7-8d54-5849bf6716d8', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            reservationRef: d.reservationRef,
-            opportunityId:  currentOpportunityId
-          })
-        });
-        const cardData = await cardCheck.json();
-        initCardFromRCM(cardData.hasCardOnFile
-          ? [{ isccauth: true, issigned: true }]
-          : []);
-      } catch(cardErr) {
-        console.warn('Card check failed — defaulting to no card on file:', cardErr);
-        initCardFromRCM([]);
-      }
-
+      // Card check runs when customer confirms booking — see confirm-btn handler
       document.getElementById('booking-details').style.display = 'block';
       document.getElementById('booking-actions').style.display = 'block';
     } else {
@@ -856,11 +839,36 @@ document.getElementById('verify-btn').onclick = async function(e) {
 // ════════════════════════════════════════════════════════════
 // CONFIRM → CHECKLIST
 // ════════════════════════════════════════════════════════════
-document.getElementById('confirm-btn').onclick = function() {
+document.getElementById('confirm-btn').onclick = async function() {
+  // Disable button and show checking state while we verify card
+  const btn = document.getElementById('confirm-btn');
+  btn.disabled = true;
+  btn.textContent = '🔍 Checking booking…';
+
+  try {
+    const cardCheck = await fetch('https://n8n.wakacampa.com:5678/webhook/03ce904c-93f2-49b7-8d54-5849bf6716d8', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        reservationRef: currentReservationRef,
+        opportunityId:  currentOpportunityId
+      })
+    });
+    const cardData = await cardCheck.json();
+    initCardFromRCM(cardData.hasCardOnFile === true
+      ? [{ isccauth: true, issigned: true }]
+      : []);
+  } catch(cardErr) {
+    console.warn('Card check failed — defaulting to no card on file:', cardErr);
+    initCardFromRCM([]);
+  }
+
+  btn.disabled = false;
+  btn.textContent = '✅ This is correct — Next';
+
   document.getElementById('booking-actions').style.display   = 'none';
   document.getElementById('checklist-section').style.display = 'block';
   applyCompletedUI();
-  // Resume polling if we had pending items on a previous session
 };
 
 // ════════════════════════════════════════════════════════════
@@ -1176,8 +1184,9 @@ function goBackToForm() {
   currentBookingNum    = '';
   currentLastName      = '';
   currentEmail         = '';
-  currentOpportunityId = '';
-  originalBeddings     = null;
+  currentOpportunityId  = '';
+  currentReservationRef = '';
+  originalBeddings      = null;
   selectedBeddings     = null;
   agreementRequested   = false;
   cardAction           = null;
