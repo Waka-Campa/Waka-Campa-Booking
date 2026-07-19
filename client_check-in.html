@@ -343,8 +343,8 @@
       <div class="bedding-buttons">
         <button class="bedding-btn" id="bedding-btn-1" onclick="selectBedding(1)">1<span class="bedding-label">set</span></button>
         <button class="bedding-btn" id="bedding-btn-2" onclick="selectBedding(2)">2<span class="bedding-label">sets</span></button>
-        <button class="bedding-btn" id="bedding-btn-3" onclick="selectBedding(3)">3<span class="bedding-label">sets</span></button>
       </div>
+      <p id="bedding-confirm-msg" style="display:none;margin-top:12px;font-size:14px;font-weight:bold;color:#166534;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:10px 14px;text-align:center;"></p>
     </div>
 
     <!-- Item 1: Driver's License -->
@@ -604,19 +604,26 @@ function loadCardAction(b) {
 // ════════════════════════════════════════════════════════════
 function initBedding(v) {
   const p = parseInt(v);
-  originalBeddings = (!isNaN(p) && p >= 1 && p <= 3) ? p : 1;
+  // Max 2 beddings
+  originalBeddings = (!isNaN(p) && p >= 1 && p <= 2) ? p : 1;
   selectedBeddings = originalBeddings;
   document.getElementById('bedding-current-value').textContent = originalBeddings;
   highlightBeddingBtn(originalBeddings);
   document.getElementById('bedding-changed-badge').style.display = 'none';
+  document.getElementById('bedding-confirm-msg').style.display = 'none';
 }
 function selectBedding(n) {
   selectedBeddings = n;
   highlightBeddingBtn(n);
-  document.getElementById('bedding-changed-badge').style.display = n !== originalBeddings ? 'inline' : 'none';
+  const changed = n !== originalBeddings;
+  document.getElementById('bedding-changed-badge').style.display = changed ? 'inline' : 'none';
+  // Show confirmation message
+  const msg = document.getElementById('bedding-confirm-msg');
+  msg.textContent = 'You have selected ' + n + (n === 1 ? ' bedding set.' : ' bedding sets.');
+  msg.style.display = 'block';
 }
 function highlightBeddingBtn(n) {
-  [1,2,3].forEach(i => document.getElementById('bedding-btn-'+i).classList.toggle('selected', i === n));
+  [1,2].forEach(i => document.getElementById('bedding-btn-'+i).classList.toggle('selected', i === n));
 }
 
 // ════════════════════════════════════════════════════════════
@@ -849,15 +856,18 @@ document.getElementById('confirm-btn').onclick = async function() {
   btn.textContent = '🔍 Checking booking…';
 
   try {
+    console.log('[CardCheck] Sending reservationRef:', currentReservationRef, 'opportunityId:', currentOpportunityId);
     const cardCheck = await fetch('https://n8n.wakacampa.com:5678/webhook/03ce904c-93f2-49b7-8d54-5849bf6716d8', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         reservationRef: currentReservationRef,
-        opportunityId:  currentOpportunityId
+        opportunityId:  currentOpportunityId,
+        bookingNum:     currentBookingNum
       })
     });
     const cardData = await cardCheck.json();
+    console.log('[CardCheck] Response:', cardData);
     initCardFromRCM(cardData.hasCardOnFile === true
       ? [{ isccauth: true, issigned: true }]
       : []);
@@ -1186,7 +1196,8 @@ function goBackToForm() {
   });
   document.getElementById('checklist-submit-area').style.display = 'none';
   document.getElementById('bedding-changed-badge').style.display = 'none';
-  [1,2,3].forEach(function(i) { document.getElementById('bedding-btn-'+i).classList.remove('selected'); });
+  [1,2].forEach(function(i) { document.getElementById('bedding-btn-'+i).classList.remove('selected'); });
+  document.getElementById('bedding-confirm-msg').style.display = 'none';
   document.getElementById('check-card').textContent = '✓';
   document.getElementById('card-arrow').style.display = '';
   document.getElementById('agreement-lock-tag').style.display = 'inline';
