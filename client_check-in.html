@@ -381,7 +381,7 @@
     <div class="checklist-item" id="item-card" onclick="openCardOverlay()">
       <div class="check-icon" id="check-card">✓</div>
       <div class="checklist-body">
-        <strong>Add a Card on File <span class="mandatory-tag">Mandatory</span></strong>
+        <strong id="card-item-title">Add a Card on File <span class="mandatory-tag">Mandatory</span></strong>
         <span id="card-status-text">Required for your campervan rental security.</span>
       </div>
       <div class="checklist-arrow" id="card-arrow">›</div>
@@ -465,7 +465,7 @@
 <div class="overlay" id="overlay-card">
   <div class="overlay-inner">
     <button class="overlay-close" onclick="closeOverlay('card')">×</button>
-    <div class="overlay-title">💳 Add a Card on File</div>
+    <div class="overlay-title" id="card-overlay-title">💳 Add a Card on File</div>
     <hr class="divider">
 
     <div class="card-disclaimer">
@@ -475,23 +475,8 @@
 
     <!-- Step 1: choose option -->
     <div id="card-step-choose">
-      <p style="font-size:15px;font-weight:bold;margin-bottom:14px;text-align:center;">How would you like to proceed?</p>
-
-      <div class="card-option" onclick="submitCardRequest('request')">
-        <div class="card-option-icon">📞</div>
-        <div class="card-option-body">
-          <strong>Request Card Entry</strong>
-          <p>A member of our support team will reach out to you right away to securely collect your card details via our vault.</p>
-        </div>
-      </div>
-
-      <div class="card-option" onclick="submitCardRequest('existing')">
-        <div class="card-option-icon">✅</div>
-        <div class="card-option-body">
-          <strong>I Already Have a Card on File</strong>
-          <p>If you've previously provided card details, let us know. Our team will verify and mark this step as complete shortly.</p>
-        </div>
-      </div>
+      <p style="font-size:15px;font-weight:bold;margin-bottom:14px;text-align:center;" id="card-choose-heading">How would you like to proceed?</p>
+      <div id="card-options-container"></div>
     </div>
 
     <!-- Step 2: confirmation message -->
@@ -574,7 +559,8 @@ let currentOpportunityId = '';
 let originalBeddings     = null;
 let selectedBeddings     = null;
 let agreementRequested   = false;
-let cardAction           = null;  // 'request' | 'existing'
+let cardAction           = null;  // 'request' | 'existing' | 'authorize'
+let hasCardOnFile        = false;  // true if RCM shows isccauth signed
 
 const ITEMS     = ['license', 'drivesafe', 'onboarding', 'card', 'drivers', 'agreement'];
 const MANDATORY = ['license', 'drivesafe', 'onboarding', 'card', 'agreement'];
@@ -594,8 +580,10 @@ let completed = { license: false, drivesafe: false, onboarding: false, card: fal
 // WEBHOOKS  — replace URLs below with your real n8n endpoints
 // ════════════════════════════════════════════════════════════
 const WEBHOOK_ACTION   = 'https://n8n.wakacampa.com/webhook/083419b8-116b-4354-b289-8d9f0fdc2eef';
-const WEBHOOK_POLL     = 'https://n8n.wakacampa.com/webhook/checkin-status-poll'; // NEW: returns { cardDone, agreementSigned }
+const WEBHOOK_POLL     = 'https://n8n.wakacampa.com/webhook/85ce2695-6cfe-485a-8cfc-78ea263b9bcb'; // NEW: returns { cardDone, agreementSigned }
 const WEBHOOK_MAIN     = 'https://n8n.wakacampa.com/webhook/e4ffaa0c-c076-4d23-8b69-9ac0f8d6a6bb';
+// NOTE: WEBHOOK_MAIN must return d.rcmSignatures — the raw RCM signatures array
+// Add to your n8n code node: rcmSignatures: <result of RCM HTTP request>.results
 
 // ════════════════════════════════════════════════════════════
 // LOCALSTORAGE
@@ -636,6 +624,39 @@ function highlightBeddingBtn(n) {
 }
 
 // ════════════════════════════════════════════════════════════
+// CARD ON FILE — init from RCM data returned by lookup
+// ════════════════════════════════════════════════════════════
+function initCardFromRCM(rcmSignatures) {
+  // rcmSignatures is the array from your n8n lookup — same shape as RCM API response
+  // A card is on file when any entry has isccauth:true AND issigned:true
+  hasCardOnFile = false;
+  if (Array.isArray(rcmSignatures)) {
+    hasCardOnFile = rcmSignatures.some(function(s) {
+      return s.isccauth === true && s.issigned === true;
+    });
+  }
+  // If already marked complete in localStorage, keep it
+  // If RCM shows card on file and not yet actioned, pre-set cardAction
+  if (hasCardOnFile && !cardAction && !completed.card) {
+    cardAction = 'authorize';
+    saveCardAction('authorize');
+  }
+  updateCardItemLabel();
+}
+
+function updateCardItemLabel() {
+  const titleEl  = document.getElementById('card-item-title');
+  const overlayT = document.getElementById('card-overlay-title');
+  if (hasCardOnFile) {
+    if (titleEl)  titleEl.innerHTML  = 'Authorize Card <span class="mandatory-tag">Mandatory</span>';
+    if (overlayT) overlayT.textContent = '💳 Authorize Card';
+  } else {
+    if (titleEl)  titleEl.innerHTML  = 'Add a Card on File <span class="mandatory-tag">Mandatory</span>';
+    if (overlayT) overlayT.textContent = '💳 Add a Card on File';
+  }
+}
+
+// ════════════════════════════════════════════════════════════
 // HELPERS
 // ════════════════════════════════════════════════════════════
 function formatDate(s) {
@@ -643,7 +664,7 @@ function formatDate(s) {
   const d = new Date(s);
   if (isNaN(d.getTime())) return s;
   const m = ['January','February','March','April','May','June','July','August','September','October','November','December'];
-  return m[d.getMonth()] + ' ' + d.getDate() + ', ' + d.getFullYear();
+  return m[d.getUTCMonth()] + ' ' + d.getUTCDate() + ', ' + d.getUTCFullYear();
 }
 function showError(msg) { const e = document.getElementById('error-msg'); e.textContent = msg; e.style.display = 'block'; }
 function clearError()   { const e = document.getElementById('error-msg'); e.textContent = ''; e.style.display = 'none'; }
@@ -703,9 +724,11 @@ function applyCompletedUI() {
         item.classList.remove('completed');
         document.getElementById('check-card').textContent = '⏳';
         item.onclick = openCardOverlay;
-        if (statusTx) statusTx.textContent = cardAction === 'request'
-          ? 'Team will contact you shortly to collect card details.'
-          : 'Awaiting verification by our team.';
+        if (statusTx) {
+          if (cardAction === 'request') statusTx.textContent = 'Team will contact you shortly to collect card details.';
+          else if (cardAction === 'authorize') statusTx.textContent = 'Authorization request sent — awaiting team confirmation.';
+          else statusTx.textContent = 'Awaiting verification by our team.';
+        }
       } else {
         item.classList.remove('completed','pending-verification');
         item.onclick = openCardOverlay;
@@ -802,6 +825,26 @@ document.getElementById('verify-btn').onclick = async function(e) {
         document.getElementById('vehicle-section').style.display = 'block';
       }
       initBedding(d.numberofbeddings);
+
+      // Check RCM for card on file — separate webhook keeps credentials server-side
+      try {
+        const cardCheck = await fetch('https://n8n.wakacampa.com/webhook/03ce904c-93f2-49b7-8d54-5849bf6716d8', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            reservationRef: d.reservationRef,
+            opportunityId:  currentOpportunityId
+          })
+        });
+        const cardData = await cardCheck.json();
+        initCardFromRCM(cardData.hasCardOnFile
+          ? [{ isccauth: true, issigned: true }]
+          : []);
+      } catch(cardErr) {
+        console.warn('Card check failed — defaulting to no card on file:', cardErr);
+        initCardFromRCM([]);
+      }
+
       document.getElementById('booking-details').style.display = 'block';
       document.getElementById('booking-actions').style.display = 'block';
     } else {
@@ -879,6 +922,54 @@ window.addEventListener('message', function(event) {
 // CARD ON FILE OVERLAY
 // ════════════════════════════════════════════════════════════
 function openCardOverlay() {
+  updateCardItemLabel();
+
+  // Build the options dynamically based on whether a card is on file
+  const container = document.getElementById('card-options-container');
+  const heading   = document.getElementById('card-choose-heading');
+
+  if (hasCardOnFile) {
+    heading.textContent = 'We found a card on file for your booking. How would you like to proceed?';
+    container.innerHTML = `
+      <div style="background:#f0fdf4;border:2px solid #22c55e;border-radius:10px;padding:16px;margin-bottom:14px;">
+        <div style="font-size:13px;color:#166534;margin-bottom:14px;">
+          <strong>✅ Card detected on file</strong><br>
+          Our system shows a credit/debit card is already associated with your booking.
+        </div>
+        <div class="card-option" onclick="submitCardRequest('authorize')" style="margin-bottom:0;">
+          <div class="card-option-icon">🔐</div>
+          <div class="card-option-body">
+            <strong>Authorize Card</strong>
+            <p>Confirm and authorize the card on file for this rental. Our team will process your authorization.</p>
+          </div>
+        </div>
+      </div>
+      <div class="card-option" onclick="submitCardRequest('request')">
+        <div class="card-option-icon">💳</div>
+        <div class="card-option-body">
+          <strong>Use a Different Card</strong>
+          <p>If you'd like to use a different card, our support team will reach out to collect the new details.</p>
+        </div>
+      </div>`;
+  } else {
+    heading.textContent = 'How would you like to proceed?';
+    container.innerHTML = `
+      <div class="card-option" onclick="submitCardRequest('request')">
+        <div class="card-option-icon">📞</div>
+        <div class="card-option-body">
+          <strong>Request Card Entry</strong>
+          <p>A member of our support team will reach out to you right away to securely collect your card details via our vault.</p>
+        </div>
+      </div>
+      <div class="card-option" onclick="submitCardRequest('existing')">
+        <div class="card-option-icon">✅</div>
+        <div class="card-option-body">
+          <strong>I Already Have a Card on File</strong>
+          <p>If you've previously provided card details, let us know. Our team will verify and mark this step as complete shortly.</p>
+        </div>
+      </div>`;
+  }
+
   document.getElementById('card-step-choose').style.display  = 'block';
   document.getElementById('card-step-confirm').style.display = 'none';
   document.getElementById('overlay-card').style.display      = 'block';
@@ -889,34 +980,50 @@ function submitCardRequest(action) {
   cardAction = action;
   saveCardAction(action);
 
-  const isRequest = action === 'request';
+  const typeMap = {
+    'request':   'card_entry_requested',
+    'existing':  'card_already_on_file',
+    'authorize': 'card_authorize_requested'
+  };
+
   fetch(WEBHOOK_ACTION, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
-      type:          isRequest ? 'card_entry_requested' : 'card_already_on_file',
+      type:          typeMap[action] || 'card_entry_requested',
       booking:       currentBookingNum,
       lastName:      currentLastName,
       email:         currentEmail,
-      opportunityId: currentOpportunityId
+      opportunityId: currentOpportunityId,
+      hasCardOnFile: hasCardOnFile
     })
   }).catch(err => console.error('Card webhook error:', err));
 
-  // Show confirm step
   document.getElementById('card-step-choose').style.display  = 'none';
   document.getElementById('card-step-confirm').style.display = 'block';
 
-  if (isRequest) {
-    document.getElementById('card-confirm-icon').textContent  = '📞';
-    document.getElementById('card-confirm-title').textContent = 'Request Sent!';
-    document.getElementById('card-confirm-body').textContent  =
-      'A member of our support team will contact you shortly to securely collect your card details via our vault. Please keep an eye on your email and phone.';
-  } else {
-    document.getElementById('card-confirm-icon').textContent  = '🔍';
-    document.getElementById('card-confirm-title').textContent = 'Got it — We\'ll Verify Shortly!';
-    document.getElementById('card-confirm-body').textContent  =
-      'Our team has been notified. We will verify your card on file and mark this step as complete. This usually happens within a few minutes.';
-  }
+  const messages = {
+    'request': {
+      icon:  '📞',
+      title: 'Request Sent!',
+      body:  'A member of our support team will contact you shortly to securely collect your card details via our vault. Please keep an eye on your email and phone.'
+    },
+    'existing': {
+      icon:  '🔍',
+      title: "Got it — We'll Verify Shortly!",
+      body:  'Our team has been notified. We will verify your card on file and mark this step as complete. This usually happens within a few minutes.'
+    },
+    'authorize': {
+      icon:  '🔐',
+      title: 'Authorization Request Sent!',
+      body:  'Your card authorization request has been sent. Our team will process the authorization and mark this step as complete shortly.'
+    }
+  };
+
+  const msg = messages[action] || messages['request'];
+  document.getElementById('card-confirm-icon').textContent  = msg.icon;
+  document.getElementById('card-confirm-title').textContent = msg.title;
+  document.getElementById('card-confirm-body').textContent  = msg.body;
 
   applyCompletedUI();
 }
@@ -1104,6 +1211,7 @@ function goBackToForm() {
   selectedBeddings     = null;
   agreementRequested   = false;
   cardAction           = null;
+  hasCardOnFile        = false;
   completed = { license: false, drivesafe: false, onboarding: false, card: false, drivers: false, agreement: false };
 
   ITEMS.forEach(function(type) {
