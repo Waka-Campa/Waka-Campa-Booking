@@ -744,6 +744,9 @@ function applyCompletedUI() {
   });
 
   checkAllDone();
+
+  // Always re-apply the correct card label after UI state is set
+  updateCardItemLabel();
 }
 
 // ════════════════════════════════════════════════════════════
