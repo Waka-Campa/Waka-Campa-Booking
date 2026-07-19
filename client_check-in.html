@@ -928,32 +928,34 @@ window.addEventListener('message', function(event) {
 // CARD ON FILE OVERLAY
 // ════════════════════════════════════════════════════════════
 function openCardOverlay() {
+  // If already completed, do nothing
+  if (completed.card) return;
+
   updateCardItemLabel();
 
   const container = document.getElementById('card-options-container');
   const heading   = document.getElementById('card-choose-heading');
 
   if (hasCardOnFile) {
-    // Card exists — single action: Authorize
-    heading.textContent = 'A card is already on file for your booking.';
+    heading.textContent = 'Card on File — Authorization';
     container.innerHTML = `
-      <div style="background:#f0fdf4;border:2px solid #22c55e;border-radius:10px;padding:16px;margin-bottom:20px;font-size:13px;color:#166534;line-height:1.6;">
-        <strong>✅ Card detected on file</strong><br>
-        Our system shows a credit/debit card is already associated with your booking. Please authorize it to confirm your rental.
-      </div>
-      <button class="btn-primary" onclick="submitCardRequest('authorize')" style="font-size:16px;padding:14px;">
-        🔐 Authorize Card on File
-      </button>`;
+      <div style="background:#f0fdf4;border:2px solid #22c55e;border-radius:10px;padding:16px;font-size:14px;color:#166534;line-height:1.7;">
+        <strong>✅ Card detected on file</strong><br><br>
+        Our system shows a credit/debit card is already associated with your booking.
+        Our team will process your card authorization and mark this step as complete shortly.
+      </div>`;
+    // Auto-fire the webhook — clicking the item IS the action
+    submitCardRequest('authorize');
   } else {
-    // No card — single action: request via CC vault
-    heading.textContent = 'No card currently on file for your booking.';
+    heading.textContent = 'Card on File Required';
     container.innerHTML = `
-      <div style="background:#fff8e1;border:1px solid #f59e0b;border-radius:8px;padding:14px;margin-bottom:20px;font-size:13px;color:#78350f;line-height:1.6;">
-        A member of our support team will reach out to you shortly to securely collect your card details via our credit card vault. Please keep an eye on your email and phone.
-      </div>
-      <button class="btn-primary" onclick="submitCardRequest('request')" style="font-size:16px;padding:14px;">
-        💳 Request Card Entry
-      </button>`;
+      <div style="background:#fff8e1;border:1px solid #f59e0b;border-radius:10px;padding:16px;font-size:14px;color:#78350f;line-height:1.7;">
+        <strong>💳 No card currently on file</strong><br><br>
+        A member of our support team will reach out to you shortly to securely collect
+        your card details via our credit card vault. Please keep an eye on your email and phone.
+      </div>`;
+    // Auto-fire the webhook — clicking the item IS the action
+    submitCardRequest('request');
   }
 
   document.getElementById('card-step-choose').style.display  = 'block';
@@ -968,7 +970,6 @@ function submitCardRequest(action) {
 
   const typeMap = {
     'request':   'card_entry_requested',
-    'existing':  'card_already_on_file',
     'authorize': 'card_authorize_requested'
   };
 
@@ -984,27 +985,6 @@ function submitCardRequest(action) {
       hasCardOnFile: hasCardOnFile
     })
   }).catch(err => console.error('Card webhook error:', err));
-
-  document.getElementById('card-step-choose').style.display  = 'none';
-  document.getElementById('card-step-confirm').style.display = 'block';
-
-  const messages = {
-    'request': {
-      icon:  '📞',
-      title: 'Request Sent!',
-      body:  'A member of our support team will contact you shortly to securely collect your card details via our credit card vault. Please keep an eye on your email and phone.'
-    },
-    'authorize': {
-      icon:  '🔐',
-      title: 'Authorization Submitted!',
-      body:  'Your card authorization has been submitted. Our team will process it and mark this step as complete shortly.'
-    }
-  };
-
-  const msg = messages[action] || messages['request'];
-  document.getElementById('card-confirm-icon').textContent  = msg.icon;
-  document.getElementById('card-confirm-title').textContent = msg.title;
-  document.getElementById('card-confirm-body').textContent  = msg.body;
 
   applyCompletedUI();
 }
