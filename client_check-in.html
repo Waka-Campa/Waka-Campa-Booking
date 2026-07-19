@@ -823,7 +823,7 @@ document.getElementById('verify-btn').onclick = async function(e) {
 
       // Check RCM for card on file — separate webhook keeps credentials server-side
       try {
-        const cardCheck = await fetch('https://n8n.wakacampa.com/webhook/03ce904c-93f2-49b7-8d54-5849bf6716d8', {
+        const cardCheck = await fetch('https://n8n.wakacampa.com:5678/webhook/03ce904c-93f2-49b7-8d54-5849bf6716d8', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
