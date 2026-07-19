@@ -468,11 +468,6 @@
     <div class="overlay-title" id="card-overlay-title">💳 Add a Card on File</div>
     <hr class="divider">
 
-    <div class="card-disclaimer">
-      <strong>Why do we need this?</strong><br>
-      As part of your campervan rental, Waka Campa requires a valid credit or debit card to be held on file. This covers any potential damage, excess charges, or incidentals that may arise during your hire. Your card will not be charged without prior notification.
-    </div>
-
     <!-- Step 1: choose option -->
     <div id="card-step-choose">
       <p style="font-size:15px;font-weight:bold;margin-bottom:14px;text-align:center;" id="card-choose-heading">How would you like to proceed?</p>
@@ -580,7 +575,7 @@ let completed = { license: false, drivesafe: false, onboarding: false, card: fal
 // WEBHOOKS  — replace URLs below with your real n8n endpoints
 // ════════════════════════════════════════════════════════════
 const WEBHOOK_ACTION   = 'https://n8n.wakacampa.com/webhook/083419b8-116b-4354-b289-8d9f0fdc2eef';
-const WEBHOOK_POLL     = 'https://n8n.wakacampa.com/webhook/85ce2695-6cfe-485a-8cfc-78ea263b9bcb'; // NEW: returns { cardDone, agreementSigned }
+const WEBHOOK_POLL     = 'https://n8n.wakacampa.com/webhook/checkin-status-poll'; // NEW: returns { cardDone, agreementSigned }
 const WEBHOOK_MAIN     = 'https://n8n.wakacampa.com/webhook/e4ffaa0c-c076-4d23-8b69-9ac0f8d6a6bb';
 // NOTE: WEBHOOK_MAIN must return d.rcmSignatures — the raw RCM signatures array
 // Add to your n8n code node: rcmSignatures: <result of RCM HTTP request>.results
@@ -924,50 +919,30 @@ window.addEventListener('message', function(event) {
 function openCardOverlay() {
   updateCardItemLabel();
 
-  // Build the options dynamically based on whether a card is on file
   const container = document.getElementById('card-options-container');
   const heading   = document.getElementById('card-choose-heading');
 
   if (hasCardOnFile) {
-    heading.textContent = 'We found a card on file for your booking. How would you like to proceed?';
+    // Card exists — single action: Authorize
+    heading.textContent = 'A card is already on file for your booking.';
     container.innerHTML = `
-      <div style="background:#f0fdf4;border:2px solid #22c55e;border-radius:10px;padding:16px;margin-bottom:14px;">
-        <div style="font-size:13px;color:#166534;margin-bottom:14px;">
-          <strong>✅ Card detected on file</strong><br>
-          Our system shows a credit/debit card is already associated with your booking.
-        </div>
-        <div class="card-option" onclick="submitCardRequest('authorize')" style="margin-bottom:0;">
-          <div class="card-option-icon">🔐</div>
-          <div class="card-option-body">
-            <strong>Authorize Card</strong>
-            <p>Confirm and authorize the card on file for this rental. Our team will process your authorization.</p>
-          </div>
-        </div>
+      <div style="background:#f0fdf4;border:2px solid #22c55e;border-radius:10px;padding:16px;margin-bottom:20px;font-size:13px;color:#166534;line-height:1.6;">
+        <strong>✅ Card detected on file</strong><br>
+        Our system shows a credit/debit card is already associated with your booking. Please authorize it to confirm your rental.
       </div>
-      <div class="card-option" onclick="submitCardRequest('request')">
-        <div class="card-option-icon">💳</div>
-        <div class="card-option-body">
-          <strong>Use a Different Card</strong>
-          <p>If you'd like to use a different card, our support team will reach out to collect the new details.</p>
-        </div>
-      </div>`;
+      <button class="btn-primary" onclick="submitCardRequest('authorize')" style="font-size:16px;padding:14px;">
+        🔐 Authorize Card on File
+      </button>`;
   } else {
-    heading.textContent = 'How would you like to proceed?';
+    // No card — single action: request via CC vault
+    heading.textContent = 'No card currently on file for your booking.';
     container.innerHTML = `
-      <div class="card-option" onclick="submitCardRequest('request')">
-        <div class="card-option-icon">📞</div>
-        <div class="card-option-body">
-          <strong>Request Card Entry</strong>
-          <p>A member of our support team will reach out to you right away to securely collect your card details via our vault.</p>
-        </div>
+      <div style="background:#fff8e1;border:1px solid #f59e0b;border-radius:8px;padding:14px;margin-bottom:20px;font-size:13px;color:#78350f;line-height:1.6;">
+        A member of our support team will reach out to you shortly to securely collect your card details via our credit card vault. Please keep an eye on your email and phone.
       </div>
-      <div class="card-option" onclick="submitCardRequest('existing')">
-        <div class="card-option-icon">✅</div>
-        <div class="card-option-body">
-          <strong>I Already Have a Card on File</strong>
-          <p>If you've previously provided card details, let us know. Our team will verify and mark this step as complete shortly.</p>
-        </div>
-      </div>`;
+      <button class="btn-primary" onclick="submitCardRequest('request')" style="font-size:16px;padding:14px;">
+        💳 Request Card Entry
+      </button>`;
   }
 
   document.getElementById('card-step-choose').style.display  = 'block';
@@ -1006,17 +981,12 @@ function submitCardRequest(action) {
     'request': {
       icon:  '📞',
       title: 'Request Sent!',
-      body:  'A member of our support team will contact you shortly to securely collect your card details via our vault. Please keep an eye on your email and phone.'
-    },
-    'existing': {
-      icon:  '🔍',
-      title: "Got it — We'll Verify Shortly!",
-      body:  'Our team has been notified. We will verify your card on file and mark this step as complete. This usually happens within a few minutes.'
+      body:  'A member of our support team will contact you shortly to securely collect your card details via our credit card vault. Please keep an eye on your email and phone.'
     },
     'authorize': {
       icon:  '🔐',
-      title: 'Authorization Request Sent!',
-      body:  'Your card authorization request has been sent. Our team will process the authorization and mark this step as complete shortly.'
+      title: 'Authorization Submitted!',
+      body:  'Your card authorization has been submitted. Our team will process it and mark this step as complete shortly.'
     }
   };
 
