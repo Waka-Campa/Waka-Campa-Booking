@@ -239,38 +239,60 @@ document.getElementById('verify-btn').onclick = async function(e) {
   }
 };
 
+// ===========================================================================
+// FIXED 22 Sep 2026 - this is what orphaned the submissions.
+//
+// The survey's email field is hidden and its ONLY source is the ?email=
+// parameter on the iframe URL. Proven in a real browser: with the parameter the
+// field holds the email, without it the field is empty and the submission lands
+// on a blank contact with no booking attached.
+//
+// form_embed.js finds iframes BY THE SURVEY ID and re-initialises them against
+// the bare survey URL, dropping the parameter. The old code gave the iframe the
+// survey id AND removed and re-injected form_embed.js on every click, against a
+// frame destroyed and rebuilt in the same breath.
+//
+// FIX: form_embed.js is never loaded (its only job was resizing - fixed height
+// instead), the iframe id is NOT the survey id so nothing can claim and
+// re-point it, and the survey is refused outright if the email is blank.
+// ===========================================================================
 function handleDetailsCorrect() {
   document.getElementById('booking-details').style.display = 'none';
   document.getElementById('confirmation-buttons').style.display = 'none';
 
-  const cacheBuster = Date.now();
-  const surveyUrl = `https://api.leadconnectorhq.com/widget/survey/THx3AWhmEJ7w71pMgWne?email=${encodeURIComponent(currentEmail)}&t=${cacheBuster}&nocache=${Math.random()}`;
+  // Refuse rather than open a survey that cannot identify the customer.
+  if (!currentEmail) {
+    document.getElementById('error').style.display = 'block';
+    document.getElementById('error').innerHTML =
+      '<div style="font-size:18px;">❌ We could not confirm your email for this booking' +
+      '<br><small>Please contact <a href="mailto:support@wakacampa.com" style="color:#0000FF;text-decoration:underline;">support@wakacampa.com</a> so we can send your form directly</small></div>' +
+      '<button onclick="resetForm()" style="margin-top:15px;padding:10px 20px;background:radial-gradient(circle 80px at 50% 70%, #444, #000);color:#fff;border:2px solid #fff;border-radius:6px;font-family:\'DM Sans\',Arial,sans-serif;">Try Again</button>';
+    return;
+  }
 
-  // Always remove old embed script to reset its internal state
-  const oldScript = document.querySelector('script[src*="form_embed.js"]');
-  if (oldScript) oldScript.remove();
+  var surveyUrl = 'https://api.leadconnectorhq.com/widget/survey/THx3AWhmEJ7w71pMgWne'
+                + '?email=' + encodeURIComponent(currentEmail);
 
-  // Clear and rebuild the iframe container entirely
-  const container = document.getElementById('survey-iframe');
+  var container = document.getElementById('survey-iframe');
   container.innerHTML = '';
 
-  const iframe = document.createElement('iframe');
+  var iframe = document.createElement('iframe');
   iframe.src = surveyUrl;
   iframe.style.border = 'none';
   iframe.style.width = '100%';
-  iframe.style.height = '600px';
+  iframe.style.height = '2400px';   // tall enough for the whole survey; no resizer needed
   iframe.style.display = 'block';
-  iframe.scrolling = 'no';
-  iframe.id = 'THx3AWhmEJ7w71pMgWne';
-  iframe.title = 'survey';
+  iframe.scrolling = 'auto';
+  // NOT the survey id. form_embed.js finds frames by that id and re-points them,
+  // which is what stripped the ?email= parameter and orphaned the submissions.
+  iframe.id = 'waka-survey-frame';
+  iframe.title = 'Drop-off form';
 
   container.appendChild(iframe);
   container.style.display = 'block';
+  container.scrollIntoView({ behavior: 'smooth', block: 'start' });
 
-  // Re-inject embed script AFTER the new iframe is in the DOM
-  const script = document.createElement('script');
-  script.src = `https://link.msgsndr.com/js/form_embed.js?t=${cacheBuster}`;
-  document.head.appendChild(script);
+  // form_embed.js is deliberately NOT loaded.
 }
 
 function resetForm() {
