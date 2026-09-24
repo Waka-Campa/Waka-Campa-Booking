@@ -12,7 +12,7 @@ body { margin: 0; padding: 20px; background: #f5f5f5; }
 </head>
 <body>
 
-<div style="max-width:650px;margin:0 auto;padding:30px;background:#fff;color:#000;box-shadow:inset 0 0 10px rgba(0,0,0,0.1);font-family:'DM Sans',Arial,sans-serif;border-radius:16px;">
+<div style="max-width:500px;margin:0 auto;padding:30px;background:#fff;color:#000;box-shadow:inset 0 0 10px rgba(0,0,0,0.1);font-family:'DM Sans',Arial,sans-serif;border-radius:16px;">
   <div style="text-align:center;margin-bottom:30px;">
     <h2 style="margin:0 0 10px 0;font-size:18px;"><strong>Drive Safe Guide and Camper Van Onboarding Form</strong></h2>
     <p style="margin:0;font-size:16px;">Mandatory Pre-hire Task</p>
@@ -21,257 +21,51 @@ body { margin: 0; padding: 20px; background: #f5f5f5; }
   </div>
 
   <div id="form-section">
-    <div style="margin-bottom:20px;">
-      <label style="display:block;margin-bottom:5px;font-weight:bold;color:#000;text-align:center;">Please enter reservation details</label>
-      <label style="display:block;margin-bottom:5px;color:#000;">Booking Number</label>
-      <input id="booking-input" type="text" placeholder="e.g. 1234" inputmode="numeric" pattern="[0-9]*" style="width:100%;padding:12px;border:2px solid #bdbdbd;background:#e0e0e0;color:#000;border-radius:8px;font-size:16px;">
-    </div>
     <div style="margin-bottom:25px;">
-      <label style="display:block;margin-bottom:5px;color:#000;">Last Name</label>
-      <input id="lastname-input" type="text" placeholder="e.g. Smith" style="width:100%;padding:12px;border:2px solid #bdbdbd;background:#e0e0e0;color:#000;border-radius:8px;font-size:16px;">
+      <label style="display:block;margin-bottom:5px;font-weight:bold;color:#000;text-align:center;">Please enter your email address</label>
+      <input id="email-input" type="email" placeholder="e.g. name@email.com" style="width:100%;padding:12px;border:2px solid #bdbdbd;background:#e0e0e0;color:#000;border-radius:8px;font-size:16px;">
     </div>
+
     <button id="verify-btn" type="button" style="width:100%;padding:15px;background:radial-gradient(circle 300px at 50% 70%, #444, #000);color:#fff;border:2px solid #fff;border-radius:8px;font-size:18px;font-weight:bold;cursor:pointer;">
       Continue
     </button>
   </div>
 
-  <div id="loading" style="display:none;padding:20px;text-align:center;color:#000;">🔍 Searching Reservation....</div>
-  <div id="booking-details" style="display:none;font-family:'DM Sans',Arial,sans-serif;"></div>
-  <div id="confirmation-buttons" style="display:none;padding:20px;text-align:center;"></div>
   <div id="survey-iframe" style="display:none;width:100%;border:none;"></div>
-  <div id="thank-you-message" style="display:none;padding:30px;text-align:center;"></div>
-  <div id="error" style="display:none;color:#ef4444;text-align:center;padding:20px;"></div>
+  <div id="error" style="display:none;color:#ef4444;text-align:center;padding:20px;font-family:'DM Sans',Arial,sans-serif;"></div>
 </div>
 
 <script>
-  // Submit on Enter key from either input field
-  document.getElementById('booking-input').addEventListener('keydown', function(e) {
-  if (e.key === 'Enter') document.getElementById('verify-btn').click();
-});
-document.getElementById('lastname-input').addEventListener('keydown', function(e) {
-  if (e.key === 'Enter') document.getElementById('verify-btn').click();
-});
-// Only allow numbers in booking input
-document.getElementById('booking-input').addEventListener('input', function() {
-  this.value = this.value.replace(/[^0-9]/g, '');
-});
+let currentEmail = '';
 
-function field(label, value) {
-  if (!value || String(value).trim() === '' || String(value).trim() === 'N/A') return '';
-  return `<div><strong>${label}:</strong> ${value}</div>`;
-}
-
-function formatDate(dateStr) {
-  if (!dateStr || dateStr === 'N/A') return 'N/A';
-  const date = new Date(dateStr);
-  if (isNaN(date.getTime())) return 'N/A';
-  const months = ['January','February','March','April','May','June','July','August','September','October','November','December'];
-  return `${months[date.getUTCMonth()]} ${date.getUTCDate()}, ${date.getUTCFullYear()}`;
-}
-
-function formatCurrency(amount) {
-  if (!amount || amount === 'N/A') return 'N/A';
-  const num = parseFloat(amount);
-  if (isNaN(num)) return 'N/A';
-  return new Intl.NumberFormat('en-NZ', { style: 'currency', currency: 'NZD', minimumFractionDigits: 2 }).format(num);
-}
-
-// Check if we have verified data in sessionStorage (set after successful lookup)
-const verified = sessionStorage.getItem('waka_verified');
-if (verified) {
-  sessionStorage.removeItem('waka_verified');
-  const data = JSON.parse(verified);
-  showBookingDetails(data);
-}
-
-document.getElementById('verify-btn').onclick = async function(e) {
+document.getElementById('verify-btn').onclick = function(e) {
   e.preventDefault();
 
-  const bookingNum = document.getElementById('booking-input').value.trim();
-  const lastName = document.getElementById('lastname-input').value.trim().toLowerCase();
+  currentEmail = document.getElementById('email-input').value.trim();
 
-  if (!bookingNum || !lastName) {
-    document.getElementById('error').innerHTML = 'Please enter both fields';
+  if (!currentEmail || !currentEmail.includes('@')) {
+    document.getElementById('error').innerHTML = 'Please enter a valid email address';
     document.getElementById('error').style.display = 'block';
     return;
   }
 
   document.getElementById('error').style.display = 'none';
   document.getElementById('form-section').style.display = 'none';
-  document.getElementById('loading').style.display = 'block';
 
-  try {
-    const response = await fetch('https://n8n.wakacampa.com/webhook/e4ffaa0c-c076-4d23-8b69-9ac0f8d6a6bb', {
-      method: 'POST',
-      headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({bookingNum, lastName})
-    });
-
-    let result;
-    if (response.status === 204) {
-      result = { success: false, message: 'Booking not found' };
-    } else {
-      const json = await response.json();
-      result = Array.isArray(json) ? json[0] : json;
-    }
-
-    document.getElementById('loading').style.display = 'none';
-
-    if (result && result.success && result.data) {
-      const data = result.data;
-      if (!data.bookingNum || !data.lastName || data.bookingNum.trim() === "" || data.lastName.trim() === "") {
-        showError('Booking not found');
-        return;
-      }
-      showBookingDetails(data);
-    } else {
-      showError(result && result.message ? result.message : 'Booking not found');
-    }
-  } catch(err) {
-    document.getElementById('loading').style.display = 'none';
-    showError('Connection error - try again');
-    console.error(err);
-  }
-};
-
-function showError(message) {
-  document.getElementById('form-section').style.display = 'block';
-  document.getElementById('error').style.display = 'block';
-  document.getElementById('error').innerHTML = `
-    <div style="font-size:18px;">
-      ❌ ${message}
-      <br><small>Contact <a href="mailto:support@wakacampa.com" style="color:#0000FF;text-decoration:underline;">support@wakacampa.com</a> if you think this is correct</small>
-    </div>
-  `;
-}
-
-function showBookingDetails(data) {
-  document.getElementById('form-section').style.display = 'none';
-  document.getElementById('loading').style.display = 'none';
-  document.getElementById('booking-details').style.display = 'block';
-
-  const bookingFields = [
-    field('Pickup Date', formatDate(data.pickupDate)),
-    field('Pickup Time', data.pickupTime),
-    field('Pickup Location', data.pickupLocation),
-    field('Dropoff Date', formatDate(data.dropoffDate)),
-    field('Dropoff Time', data.dropoffTime),
-    field('Dropoff Location', data.dropoffLocation),
-    field('Total Cost', data.totalCost ? 'NZD ' + formatCurrency(data.totalCost) : ''),
-    field('Balance Due', data.totalBalanceDue ? 'NZD ' + formatCurrency(data.totalBalanceDue) : '')
-  ].filter(Boolean);
-
-  const contactFields = [
-    field('Hirer Full Name', data.hirerFullName),
-    field('Email', data.hirerEmail || data.email),
-    field('Phone', data.hirerPhone),
-    field('Additional Phone', data.additionalPhone)
-  ].filter(Boolean);
-
-  let html = `
-    <div style="background:#fff;color:#000;padding:30px;border-radius:20px;text-align:left;box-shadow:0 20px 40px rgba(0,0,0,0.2);font-family:'DM Sans',Arial,sans-serif;">
-      <h2 style="margin:0 0 20px 0;text-align:center"><strong>Booking # ${data.bookingNum || 'N/A'}</strong></h2>
-      <div style="border-bottom:1px solid #ddd;margin:0 0 20px 0;"></div>
-      ${bookingFields.length ? `
-      <div style="margin-bottom:20px;">
-        <h4 style="margin:0 0 10px 0;font-size:18px;color:#000;"><strong><u>Booking Details</u></strong></h4>
-        <div style="display:grid;grid-template-columns:1fr;gap:8px;font-size:16px;">${bookingFields.join('')}</div>
-      </div>
-      <div style="border-bottom:1px solid #ddd;margin:20px 0;"></div>` : ''}
-      ${contactFields.length ? `
-      <div style="margin-bottom:20px;">
-        <h4 style="margin:0 0 10px 0;font-size:18px;color:#000;"><strong><u>Contact Details</u></strong></h4>
-        <div style="display:grid;grid-template-columns:1fr;gap:8px;font-size:16px;">${contactFields.join('')}</div>
-      </div>
-      <div style="border-bottom:1px solid #ddd;margin:20px 0;"></div>` : ''}
-  `;
-
-  if (data.driverName || data.driverLicenseNumber) {
-    html += `
-      <div style="margin-bottom:20px;">
-        <h4 style="margin:0 0 10px 0;font-size:18px;color:#000;"><strong><u>Driver's Information</u></strong></h4>
-        <div style="display:grid;grid-template-columns:1fr;gap:8px;font-size:16px;">
-          ${field("Driver's Full Name", data.driverName)}
-          ${field("Driver's License Number", data.driverLicenseNumber)}
-        </div>
-      </div>
-      <div style="border-bottom:1px solid #ddd;margin:20px 0;"></div>`;
-  }
-
-  if (data.vehicleCategory || data.vehicleFleetNumber) {
-    html += `
-      <div style="margin-bottom:15px;">
-        <h4 style="margin:0 0 10px 0;font-size:18px;color:#000;"><strong><u>Vehicle Details</u></strong></h4>
-        <div style="display:grid;grid-template-columns:1fr;gap:8px;font-size:16px;">
-          ${field('Vehicle Type', data.vehicleCategory)}
-          ${field('Vehicle Fleet Number', data.vehicleFleetNumber)}
-        </div>
-      </div>
-      <div style="border-bottom:1px solid #ddd;margin:20px 0;"></div>`;
-  }
-
-  html += `</div>`;
-  document.getElementById('booking-details').innerHTML = html;
-
-  const email = data.hirerEmail || data.email || '';
-  const bookingNum = data.bookingNum || '';
-
-  document.getElementById('confirmation-buttons').style.display = 'block';
-  document.getElementById('confirmation-buttons').innerHTML = `
-    <div style="display:flex;justify-content:center;gap:16px;margin-bottom:15px;">
-      <button id="details-correct" onclick="loadSurvey('${encodeURIComponent(bookingNum)}','${encodeURIComponent(email)}')"
-        style="flex:1;max-width:200px;padding:12px;background:radial-gradient(circle 80px at 50% 70%,#22c55e,#16a34a);color:#fff;border:2px solid #fff;border-radius:8px;font-size:16px;font-weight:bold;cursor:pointer;font-family:'DM Sans',Arial,sans-serif;">
-        ✓ Details are correct
-      </button>
-      <button onclick="window.location.href='mailto:support@wakacampa.com?subject=Booking%20Verification%20Issue%20-%20${bookingNum}&body=Hi%20Support,%0A%0AI%20have%20a%20problem%20with%20booking%20%23${bookingNum}.%0AThe%20details%20shown%20are%20incorrect.%0A%0APlease%20help.%0A%0AThanks!'"
-        style="flex:1;max-width:200px;padding:12px;background:radial-gradient(circle 80px at 50% 70%,#ef4444,#dc2626);color:#fff;border:2px solid #fff;border-radius:8px;font-size:16px;font-weight:bold;cursor:pointer;font-family:'DM Sans',Arial,sans-serif;">
-        ✗ Details are incorrect
-      </button>
-    </div>
-    <div style="text-align:center;margin-top:10px;">
-      <button onclick="window.location.reload()"
-        style="padding:8px 20px;background:transparent;color:#666;border:1px solid #ccc;border-radius:6px;font-size:14px;cursor:pointer;font-family:'DM Sans',Arial,sans-serif;">
-        ← Try a different booking
-      </button>
-    </div>
-  `;
-}
-
-// ===========================================================================
-// FIXED 22 Sep 2026 - this is what orphaned 5 submissions, the last of them
-// at 01:55 on 22 Sep (booking 4856).
-//
-// The survey's email field is hidden and its ONLY source is the ?email=
-// parameter on the iframe URL. Proven in a real browser: with the parameter the
-// field holds the email, without it the field is empty, the submission lands on
-// a blank contact with no booking attached, and nothing downstream runs - so
-// the customer keeps being chased for a form they already completed.
-//
-// form_embed.js finds iframes BY THE SURVEY ID and re-initialises them against
-// the bare survey URL, dropping the parameters. The old code gave the iframe
-// the survey id AND injected form_embed.js straight after creating it.
-//
-// FIX: form_embed.js is never loaded (its only job was resizing - fixed height
-// instead), the iframe id is NOT the survey id so nothing can claim and
-// re-point it, and the survey is refused outright if the email is blank.
-// ===========================================================================
-function loadSurvey(encodedBookingNum, encodedEmail) {
-  document.getElementById('booking-details').style.display = 'none';
-  document.getElementById('confirmation-buttons').style.display = 'none';
-
-  // Refuse rather than open a survey that cannot identify the customer.
-  if (!encodedEmail) {
-    document.getElementById('error').style.display = 'block';
-    document.getElementById('error').innerHTML =
-      '<div style="font-size:18px;">❌ We could not confirm your email for this booking' +
-      '<br><small>Please contact <a href="mailto:support@wakacampa.com" style="color:#0000FF;text-decoration:underline;">support@wakacampa.com</a> so we can send your form directly</small></div>' +
-      '<button onclick="window.location.reload()" style="margin-top:15px;padding:10px 20px;background:radial-gradient(circle 80px at 50% 70%, #444, #000);color:#fff;border:2px solid #fff;border-radius:6px;font-family:\'DM Sans\',Arial,sans-serif;">Try Again</button>';
-    return;
-  }
-
+  // =========================================================================
+  // FIXED 24 Sep 2026. THIS PAGE IS WHY THE DRIVE SAFE SUBMISSIONS KEPT ORPHANING.
+  //
+  // The survey's email field is hidden and its ONLY source is the ?email= parameter on the
+  // iframe URL. form_embed.js finds iframes BY THE SURVEY ID and re-initialises them against
+  // the bare survey URL, dropping the parameter - and this page gave its iframe exactly that
+  // id, then loaded form_embed.js. A submission that loses the parameter arrives with no
+  // customer attached: five have, the most recent at 01:55 on 22 Sep (booking 4856).
+  //
+  // FIX: form_embed.js is never loaded (its only job was resizing - fixed height instead), and
+  // the iframe id is NOT the survey id, so nothing can claim it and re-point it.
+  // =========================================================================
   var surveyUrl = 'https://api.leadconnectorhq.com/widget/survey/Z72YgsQdLM9n2lfu6DTD'
-                + '?booking_number=' + encodedBookingNum
-                + '&email=' + encodedEmail;
+                + '?email=' + encodeURIComponent(currentEmail);
 
   var container = document.getElementById('survey-iframe');
   container.innerHTML = '';
@@ -280,12 +74,10 @@ function loadSurvey(encodedBookingNum, encodedEmail) {
   iframe.src = surveyUrl;
   iframe.style.border = 'none';
   iframe.style.width = '100%';
-  iframe.style.height = '4200px';   // this survey is long (videos + licence uploads); no resizer needed
+  iframe.style.height = '4200px';   // this survey is long (videos, licence uploads, signature)
   iframe.style.display = 'block';
   iframe.scrolling = 'auto';
-  // NOT the survey id. form_embed.js finds frames by that id and re-points them,
-  // which is what stripped the parameters and orphaned the submissions.
-  iframe.id = 'waka-survey-frame';
+  iframe.id = 'waka-survey-frame';  // NOT the survey id - that is what let it be re-pointed
   iframe.title = 'Drive Safe Guide and Camper Van Onboarding form';
 
   container.appendChild(iframe);
@@ -293,7 +85,7 @@ function loadSurvey(encodedBookingNum, encodedEmail) {
   container.scrollIntoView({ behavior: 'smooth', block: 'start' });
 
   // form_embed.js is deliberately NOT loaded.
-}
+};
 </script>
 
 </body>
