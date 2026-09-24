@@ -52,28 +52,39 @@ document.getElementById('verify-btn').onclick = function(e) {
   document.getElementById('error').style.display = 'none';
   document.getElementById('form-section').style.display = 'none';
 
-  const cacheBuster = Date.now();
-  const surveyUrl = `https://api.leadconnectorhq.com/widget/survey/Z72YgsQdLM9n2lfu6DTD?email=${encodeURIComponent(currentEmail)}&t=${cacheBuster}`;
+  // =========================================================================
+  // FIXED 24 Sep 2026. THIS PAGE IS WHY THE DRIVE SAFE SUBMISSIONS KEPT ORPHANING.
+  //
+  // The survey's email field is hidden and its ONLY source is the ?email= parameter on the
+  // iframe URL. form_embed.js finds iframes BY THE SURVEY ID and re-initialises them against
+  // the bare survey URL, dropping the parameter - and this page gave its iframe exactly that
+  // id, then loaded form_embed.js. A submission that loses the parameter arrives with no
+  // customer attached: five have, the most recent at 01:55 on 22 Sep (booking 4856).
+  //
+  // FIX: form_embed.js is never loaded (its only job was resizing - fixed height instead), and
+  // the iframe id is NOT the survey id, so nothing can claim it and re-point it.
+  // =========================================================================
+  var surveyUrl = 'https://api.leadconnectorhq.com/widget/survey/Z72YgsQdLM9n2lfu6DTD'
+                + '?email=' + encodeURIComponent(currentEmail);
 
-  const iframe = document.createElement('iframe');
+  var container = document.getElementById('survey-iframe');
+  container.innerHTML = '';
+
+  var iframe = document.createElement('iframe');
   iframe.src = surveyUrl;
   iframe.style.border = 'none';
   iframe.style.width = '100%';
-  iframe.style.height = '600px';
+  iframe.style.height = '4200px';   // this survey is long (videos, licence uploads, signature)
   iframe.style.display = 'block';
-  iframe.scrolling = 'no';
-  iframe.id = 'Z72YgsQdLM9n2lfu6DTD';
-  iframe.title = 'survey';
+  iframe.scrolling = 'auto';
+  iframe.id = 'waka-survey-frame';  // NOT the survey id - that is what let it be re-pointed
+  iframe.title = 'Drive Safe Guide and Camper Van Onboarding form';
 
-  document.getElementById('survey-iframe').innerHTML = '';
-  document.getElementById('survey-iframe').appendChild(iframe);
-  document.getElementById('survey-iframe').style.display = 'block';
+  container.appendChild(iframe);
+  container.style.display = 'block';
+  container.scrollIntoView({ behavior: 'smooth', block: 'start' });
 
-  if (!document.querySelector('script[src*="form_embed.js"]')) {
-    const script = document.createElement('script');
-    script.src = `https://link.msgsndr.com/js/form_embed.js?t=${cacheBuster}`;
-    document.head.appendChild(script);
-  }
+  // form_embed.js is deliberately NOT loaded.
 };
 </script>
 
