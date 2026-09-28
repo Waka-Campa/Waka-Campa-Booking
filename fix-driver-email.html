@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Correct an Additional Driver's Email</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&display=swap');
+* { box-sizing: border-box; }
+body { margin: 0; padding: 20px; background: #f5f5f5; }
+</style>
+</head>
+<body>
+
+<div style="max-width:500px;margin:0 auto;padding:30px;background:#fff;color:#000;box-shadow:inset 0 0 10px rgba(0,0,0,0.1);font-family:'DM Sans',Arial,sans-serif;border-radius:16px;">
+
+  <div style="text-align:center;margin-bottom:30px;">
+    <h2 style="margin:0 0 10px 0;font-size:18px;"><strong>Correct an Additional Driver's Email</strong></h2>
+    <p id="subtitle" style="margin:0;font-size:16px;">Checking your link&hellip;</p>
+    <div style="border-bottom:1px solid #ddd;margin:20px 0;"></div>
+    <img src="https://storage.googleapis.com/msgsndr/va82O7V3l50t4My9T2zQ/media/5a14548a-e6a8-4544-a2d6-41d740bb697f.jpg" alt="Waka Campa" style="width:118px;height:118px;display:inline-block;">
+  </div>
+
+  <div id="loading" style="text-align:center;padding:10px 0 20px 0;font-size:16px;">One moment&hellip;</div>
+
+  <div id="form-section" style="display:none;">
+    <p style="margin:0 0 20px 0;font-size:16px;line-height:1.5;">
+      We could not send the driver form to
+      <strong id="driver-name">the additional driver</strong>
+      on booking <strong id="booking-no"></strong>, because the address given was not a valid one:
+    </p>
+
+    <p style="margin:0 0 25px 0;padding:12px;background:#fdecea;border-radius:8px;font-size:16px;word-break:break-all;text-align:center;">
+      <span id="bad-email"></span>
+    </p>
+
+    <div style="margin-bottom:25px;">
+      <label for="email-input" style="display:block;margin-bottom:5px;font-weight:bold;color:#000;text-align:center;">Please enter their correct email address</label>
+      <input id="email-input" type="email" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="e.g. name@email.com" style="width:100%;padding:12px;border:2px solid #bdbdbd;background:#e0e0e0;color:#000;border-radius:8px;font-size:16px;">
+    </div>
+
+    <button id="submit-btn" type="button" style="width:100%;padding:15px;background:radial-gradient(circle 300px at 50% 70%, #444, #000);color:#fff;border:2px solid #fff;border-radius:8px;font-size:18px;font-weight:bold;cursor:pointer;">
+      Send them the form
+    </button>
+  </div>
+
+  <div id="done" style="display:none;text-align:center;padding:10px 0;font-size:16px;line-height:1.5;"></div>
+  <div id="error" style="display:none;color:#ef4444;text-align:center;padding:20px 0 0 0;font-size:16px;line-height:1.5;"></div>
+</div>
+
+<script>
+// ===========================================================================
+// WHY THIS PAGE EXISTS.  28 September 2026.
+//
+// The additional-driver email fields on the Drive Safe form are plain TEXT fields in
+// GoHighLevel - no validation of any kind. GoHighLevel's own contact API is stricter than its
+// own form widget and rejects an address like "jan.petry@gmailcom" with a 422. The driver's
+// address is the ONLY route by which they receive the driver form, so a typo there means that
+// driver is never licensed, never verified and never on the rental agreement.
+//
+// The survey runs in a cross-origin iframe, so validation cannot be injected into it from our
+// own page. This page is the recovery path instead: the hirer, whose own address we know is
+// good, is sent here to correct the one that was rejected.
+//
+// The validation below is DELIBERATELY STRICTER THAN type="email". The HTML standard does not
+// require a dot in the domain, so every browser accepts "jan.petry@gmailcom" - the exact
+// address that broke us. The same test runs again on the server; this copy is only here so the
+// hirer is told immediately rather than after a round trip.
+// ===========================================================================
+var LOOKUP = 'https://n8n.wakacampa.com/webhook/driver-email-fix';
+var SUBMIT = 'https://n8n.wakacampa.com/webhook/driver-email-fix-submit';
+
+var EMAIL_LOOKS_REAL = function (e) {
+  return /^[^\s@]+@[^\s@.]+(\.[^\s@.]+)+$/.test(String(e == null ? '' : e).trim());
+};
+
+var token = new URLSearchParams(window.location.search).get('t') || '';
+
+var el = function (id) { return document.getElementById(id); };
+var show = function (id, html) {
+  el('loading').style.display = 'none';
+  el('form-section').style.display = 'none';
+  var n = el(id);
+  if (html !== undefined) n.innerHTML = html;
+  n.style.display = 'block';
+};
+var fail = function (msg) {
+  el('subtitle').textContent = 'We could not open this link';
+  show('error', msg);
+};
+
+if (!token) {
+  fail('This link is incomplete. Please open it straight from the email we sent you, or reply to that email with the correct address.');
+} else {
+  fetch(LOOKUP + '?t=' + encodeURIComponent(token))
+    .then(function (r) { return r.json(); })
+    .then(function (d) {
+      if (d && d.ok) {
+        el('subtitle').textContent = 'One address needs correcting';
+        el('driver-name').textContent = d.driverName || 'the additional driver';
+        el('booking-no').textContent = '#' + (d.bookingNumber || '');
+        el('bad-email').textContent = d.badEmail || '(nothing was entered)';
+        el('loading').style.display = 'none';
+        el('form-section').style.display = 'block';
+        el('email-input').focus();
+      } else if (d && d.done) {
+        el('subtitle').textContent = 'Already sorted';
+        show('done', 'This address has already been corrected, and the driver form has been sent. There is nothing further for you to do.');
+      } else {
+        fail((d && d.reason) || 'This link is not valid. Please reply to the email we sent you instead.');
+      }
+    })
+    .catch(function () {
+      fail('We could not reach our system just now. Please try again in a few minutes, or reply to the email we sent you.');
+    });
+}
+
+el('submit-btn').onclick = function (e) {
+  e.preventDefault();
+  var value = el('email-input').value.trim();
+  el('error').style.display = 'none';
+
+  if (!EMAIL_LOOKS_REAL(value)) {
+    el('error').innerHTML = 'That does not look like a complete email address. Please check it &mdash; a common slip is a missing dot, for example <strong>gmailcom</strong> instead of <strong>gmail.com</strong>.';
+    el('error').style.display = 'block';
+    return;
+  }
+
+  var btn = el('submit-btn');
+  btn.disabled = true;
+  btn.textContent = 'Sending\u2026';
+
+  fetch(SUBMIT, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ t: token, email: value })
+  })
+    .then(function (r) { return r.json(); })
+    .then(function (d) {
+      if (d && d.ok) {
+        el('subtitle').textContent = 'Thank you';
+        show('done', 'We have sent the driver form to <strong>' + value.replace(/[<>&]/g, '') +
+          '</strong>.<br><br>They will need to complete it, including their licence photos, before pick-up.');
+      } else {
+        btn.disabled = false;
+        btn.textContent = 'Send them the form';
+        el('error').textContent = (d && d.reason) || 'We could not save that address. Please reply to the email we sent you instead.';
+        el('error').style.display = 'block';
+      }
+    })
+    .catch(function () {
+      btn.disabled = false;
+      btn.textContent = 'Send them the form';
+      el('error').textContent = 'We could not reach our system just now. Please try again in a few minutes.';
+      el('error').style.display = 'block';
+    });
+};
+</script>
+
+</body>
+</html>
