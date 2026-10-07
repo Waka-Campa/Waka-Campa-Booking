@@ -49,6 +49,124 @@ let currentBookingNum = '';
 let currentLastName = '';
 let currentEmail = '';
 
+// ===========================================================================
+// RESUMING AFTER AN INTERRUPTION.  Added 6 October 2026.
+//
+// WHY THIS EXISTS. Everything about the customer's booking lived in the three variables above
+// and was written nowhere else. One reload and it was all gone - the page fell back to
+// "Please enter reservation details" and the survey iframe was destroyed with whatever the
+// customer had already filled in.
+//
+// That is not a rare event here. On iOS, opening the camera from a file input routinely causes
+// Safari to evict and reload the page when the customer comes back. The drop-off form has 18
+// steps and 12 photo fields, so there are a dozen chances per form for it to happen. Measured
+// across 100 real submissions: 2.8 MB per photo, 17.3 MB for a typical drop-off, worst case
+// 52 MB - on whatever signal exists at a depot. A dropped connection does the same thing.
+//
+// Proven on a simulated iPhone before this was written: verify a booking, reach the survey,
+// reload -> back to the booking-number screen, localStorage and sessionStorage both empty.
+// Toby Jones (booking 4574) reported exactly that, at his pick-up AND at his drop-off, and has
+// no completed form from either.
+//
+// WHAT THIS DOES. Once a booking is verified, it is remembered for 3 hours. If the page is
+// reloaded or reopened in that window, the customer lands straight back on the form instead of
+// the booking look-up, with a clear way to start over if it is not their booking.
+//
+// WHAT IT CANNOT DO. Whatever the customer typed INSIDE the GoHighLevel survey belongs to
+// GoHighLevel, not to this page. Resuming returns them to the survey; it does not promise their
+// earlier answers are still there. Getting them back without re-entering the booking number in
+// front of a vehicle is the win.
+//
+// Storage is wrapped in try/catch throughout: private browsing can throw on access, and a form
+// that fails because it could not save a convenience would be worse than no saving at all.
+// ===========================================================================
+var WAKA_RESUME_KEY = 'waka_pickup_resume';
+var WAKA_RESUME_MINUTES = 180;
+
+function wakaRemember(bookingNum, lastName, email) {
+  try {
+    localStorage.setItem(WAKA_RESUME_KEY, JSON.stringify({
+      bookingNum: bookingNum, lastName: lastName, email: email, at: Date.now()
+    }));
+  } catch (e) { /* private mode - resuming is a convenience, never a requirement */ }
+}
+
+function wakaForget() {
+  try { localStorage.removeItem(WAKA_RESUME_KEY); } catch (e) {}
+}
+
+function wakaRecall() {
+  try {
+    var raw = localStorage.getItem(WAKA_RESUME_KEY);
+    if (!raw) return null;
+    var v = JSON.parse(raw);
+    if (!v || !v.bookingNum || !v.email) return null;
+    if (Date.now() - Number(v.at || 0) > WAKA_RESUME_MINUTES * 60 * 1000) { wakaForget(); return null; }
+    return v;
+  } catch (e) { return null; }
+}
+
+// Shown above the form so nobody is ever trapped in somebody else's booking.
+function wakaResumeBanner(bookingNum) {
+  var bar = document.createElement('div');
+  bar.id = 'waka-resume-bar';
+  // PINNED TO THE TOP OF THE SCREEN, not placed in the page flow.
+  // First version sat at the top of the document. On resume the page lands scrolled into the
+  // survey, so the banner ended up 310px ABOVE the viewport - invisible, and untappable, at
+  // precisely the moment a customer needs it ("this isn't my booking"). Measured on a simulated
+  // iPhone: button rect y = -310 with the page scrolled to 344. 6 Oct 2026.
+  bar.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:99999;' +
+    'padding:10px 16px;background:#fff;border-bottom:1px solid #e0e0e0;' +
+    'font-family:\'DM Sans\',Arial,sans-serif;font-size:15px;color:#000;' +
+    'display:flex;align-items:center;justify-content:space-between;gap:12px;' +
+    'box-shadow:0 2px 8px rgba(0,0,0,0.12);';
+  bar.innerHTML = '<span>Continuing booking <strong>#' + String(bookingNum).replace(/[<>&]/g, '') + '</strong></span>';
+  var btn = document.createElement('button');
+  btn.type = 'button';
+  btn.textContent = 'Not you? Start over';
+  btn.style.cssText = 'padding:8px 12px;border:1px solid #bdbdbd;background:#f5f5f5;border-radius:8px;' +
+    'font-family:\'DM Sans\',Arial,sans-serif;font-size:14px;cursor:pointer;white-space:nowrap;';
+  // Reset in place rather than reloading: a reload races the storage write and the customer ends
+  // up looking at the same banner again.
+  // Bound for BOTH click and touchend: on a touch device a tap did not always reach the onclick
+  // property, so the button looked dead - which is exactly the kind of thing that sends a
+  // customer back to WhatsApp. Tested on a simulated iPhone, 6 Oct 2026.
+  var startOver = function (ev) {
+    if (ev) { try { ev.preventDefault(); ev.stopPropagation(); } catch (e) {} }
+    wakaForget();
+    var b = document.getElementById('waka-resume-bar');
+    if (b && b.parentNode) b.parentNode.removeChild(b);
+    try { document.body.style.paddingTop = ''; window.scrollTo(0, 0); } catch (e) {}
+    try { resetForm(); } catch (e) {}
+    wakaForget();
+  };
+  btn.addEventListener('click', startOver);
+  btn.addEventListener('touchend', startOver);
+  bar.appendChild(btn);
+  document.body.insertBefore(bar, document.body.firstChild);
+  // Keep the pinned banner from covering the top of the form.
+  try { document.body.style.paddingTop = (bar.offsetHeight + 12) + 'px'; } catch (e) {}
+}
+
+window.addEventListener('DOMContentLoaded', function () {
+  var saved = wakaRecall();
+  if (!saved) return;
+  currentBookingNum = saved.bookingNum;
+  currentLastName = saved.lastName || '';
+  currentEmail = saved.email;
+  try {
+    wakaResumeBanner(saved.bookingNum);
+    document.getElementById('form-section').style.display = 'none';
+    document.getElementById('loading').style.display = 'none';
+    handleDetailsCorrect();
+  } catch (e) {
+    // If anything about resuming fails, fall back to the normal booking look-up.
+    wakaForget();
+    try { document.getElementById('form-section').style.display = 'block'; } catch (e2) {}
+  }
+});
+
+
 // Only allow numbers in booking input
 document.getElementById('booking-input').addEventListener('input', function() {
   this.value = this.value.replace(/[^0-9]/g, '');
@@ -270,6 +388,9 @@ function handleDetailsCorrect() {
     return;
   }
 
+  // Remembered here, not at look-up: this is the point the customer commits to the form.
+  wakaRemember(currentBookingNum, currentLastName, currentEmail);
+
   var surveyUrl = 'https://api.leadconnectorhq.com/widget/survey/VrgPS6LDk02RaQPNfUJY'
                 + '?email=' + encodeURIComponent(currentEmail);
 
@@ -292,6 +413,10 @@ function handleDetailsCorrect() {
 }
 
 function resetForm() {
+  wakaForget();
+  var bar = document.getElementById('waka-resume-bar');
+  if (bar && bar.parentNode) bar.parentNode.removeChild(bar);
+
   document.getElementById('form-section').style.display = 'block';
   document.getElementById('error').style.display = 'none';
   document.getElementById('booking-details').style.display = 'none';
