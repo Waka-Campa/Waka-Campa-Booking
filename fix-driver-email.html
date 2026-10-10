@@ -27,10 +27,10 @@ body { margin: 0; padding: 20px; background: #f5f5f5; }
     <p style="margin:0 0 20px 0;font-size:16px;line-height:1.5;">
       We could not send the driver form to
       <strong id="driver-name">the additional driver</strong>
-      on booking <strong id="booking-no"></strong>, because the address given was not a valid one:
+      on booking <strong id="booking-no"></strong>, <span id="why">because the address given was not a valid one:</span>
     </p>
 
-    <p style="margin:0 0 25px 0;padding:12px;background:#fdecea;border-radius:8px;font-size:16px;word-break:break-all;text-align:center;">
+    <p id="bad-email-box" style="margin:0 0 25px 0;padding:12px;background:#fdecea;border-radius:8px;font-size:16px;word-break:break-all;text-align:center;">
       <span id="bad-email"></span>
     </p>
 
@@ -96,10 +96,19 @@ if (!token) {
     .then(function (r) { return r.json(); })
     .then(function (d) {
       if (d && d.ok) {
-        el('subtitle').textContent = 'One address needs correcting';
+        // A blank address and a typo'd one fail for the same reason - the driver cannot be
+        // reached - so both land here. Only the wording differs, and with nothing to show
+        // there is no point showing an empty red box. 8 Oct 2026.
+        var bad = String((d.badEmail == null ? '' : d.badEmail)).trim();
+        el('subtitle').textContent = bad ? 'One address needs correcting' : 'One address is missing';
         el('driver-name').textContent = d.driverName || 'the additional driver';
         el('booking-no').textContent = '#' + (d.bookingNumber || '');
-        el('bad-email').textContent = d.badEmail || '(nothing was entered)';
+        if (bad) {
+          el('bad-email').textContent = bad;
+        } else {
+          el('why').textContent = 'because no email address was given for them.';
+          el('bad-email-box').style.display = 'none';
+        }
         el('loading').style.display = 'none';
         el('form-section').style.display = 'block';
         el('email-input').focus();
@@ -128,7 +137,7 @@ el('submit-btn').onclick = function (e) {
 
   var btn = el('submit-btn');
   btn.disabled = true;
-  btn.textContent = 'Sending\u2026';
+  btn.textContent = 'Sending…';
 
   fetch(SUBMIT, {
     method: 'POST',
